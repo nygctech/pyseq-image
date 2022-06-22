@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[14]:
-
-
 import dask.dataframe as dd
 import dask.array as da
 import dask.bag as db
@@ -13,9 +10,6 @@ import matplotlib.pyplot as plt
 import skimage
 import anndata as ad
 import pandas as pd
-
-
-# In[15]:
 
 
 def return_anndata(path):
