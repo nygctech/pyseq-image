@@ -1,0 +1,13 @@
+from pyseq_pipeline.pre import utils
+
+configfile: 'config.yaml'
+
+
+rule fix_lighting:
+    input:
+        sections = utils.parse_sections(config['experiment_config_path'])
+    output:
+        temp(processed_zarr/{sections}.zarr,
+             process_zarr/{sections}.attr)
+    script:
+        scripts/preprocess.py
