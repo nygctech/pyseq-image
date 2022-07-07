@@ -1,0 +1,61 @@
+/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/cli/dask_worker.py:334: FutureWarning: The --nprocs flag will be removed in a future release. It has been renamed to --nworkers.
+  warnings.warn(
+2022-06-30 13:33:21,781 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.201.14:46712'
+2022-06-30 13:33:21,807 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.201.14:36444'
+2022-06-30 13:33:21,820 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.201.14:39665'
+2022-06-30 13:33:21,821 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.201.14:38982'
+2022-06-30 13:33:23,124 - distributed.diskutils - INFO - Found stale lock file and directory '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-z9li7fsa', purging
+2022-06-30 13:33:23,135 - distributed.diskutils - INFO - Found stale lock file and directory '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-ffze7qxv', purging
+2022-06-30 13:33:32,823 - distributed.worker - INFO -       Start worker at:    tcp://10.4.201.14:40341
+2022-06-30 13:33:32,823 - distributed.worker - INFO -       Start worker at:    tcp://10.4.201.14:42603
+2022-06-30 13:33:32,823 - distributed.worker - INFO -       Start worker at:    tcp://10.4.201.14:44651
+2022-06-30 13:33:32,824 - distributed.worker - INFO -          Listening to:    tcp://10.4.201.14:40341
+2022-06-30 13:33:32,824 - distributed.worker - INFO -          Listening to:    tcp://10.4.201.14:42603
+2022-06-30 13:33:32,824 - distributed.worker - INFO -          Listening to:    tcp://10.4.201.14:44651
+2022-06-30 13:33:32,824 - distributed.worker - INFO -          dashboard at:          10.4.201.14:33878
+2022-06-30 13:33:32,824 - distributed.worker - INFO -          dashboard at:          10.4.201.14:35363
+2022-06-30 13:33:32,824 - distributed.worker - INFO -          dashboard at:          10.4.201.14:35723
+2022-06-30 13:33:32,824 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,824 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,824 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,824 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,824 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,824 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,824 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:33:32,824 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:33:32,824 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:33:32,825 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:33:32,825 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:33:32,825 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:33:32,825 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-0u5o8rkg
+2022-06-30 13:33:32,825 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-lydipnn7
+2022-06-30 13:33:32,825 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-z4h1g3x1
+2022-06-30 13:33:32,825 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,825 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,825 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,825 - distributed.worker - INFO -       Start worker at:    tcp://10.4.201.14:40363
+2022-06-30 13:33:32,831 - distributed.worker - INFO -          Listening to:    tcp://10.4.201.14:40363
+2022-06-30 13:33:32,831 - distributed.worker - INFO -          dashboard at:          10.4.201.14:42266
+2022-06-30 13:33:32,831 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,831 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,831 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:33:32,832 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:33:32,832 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-f24vkvrl
+2022-06-30 13:33:32,832 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,853 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,853 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,854 - distributed.core - INFO - Starting established connection
+2022-06-30 13:33:32,855 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,855 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,856 - distributed.core - INFO - Starting established connection
+2022-06-30 13:33:32,858 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:32,858 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:32,859 - distributed.core - INFO - Starting established connection
+2022-06-30 13:33:33,054 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:38499
+2022-06-30 13:33:33,054 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:33:33,056 - distributed.core - INFO - Starting established connection
+2022-06-30 13:33:40,878 - distributed.core - INFO - Event loop was unresponsive in Worker for 3.48s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+2022-06-30 13:33:40,878 - distributed.core - INFO - Event loop was unresponsive in Worker for 3.48s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+2022-06-30 13:33:44,750 - distributed.core - INFO - Event loop was unresponsive in Worker for 3.87s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+2022-06-30 13:33:44,750 - distributed.core - INFO - Event loop was unresponsive in Worker for 3.87s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+slurmstepd: error: *** JOB 24573232 ON pe2cc2-004 CANCELLED AT 2022-06-30T14:33:21 DUE TO TIME LIMIT ***

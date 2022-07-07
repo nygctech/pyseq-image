@@ -6,7 +6,6 @@
 
 import zarr
 import numpy as np
-#Loading Required Libraries 
 import anndata
 import scipy as sp
 import dask 
@@ -19,7 +18,6 @@ import torch
 import pickle
 
 
-# In[ ]:
 
 
 labels = skimage.io.imread('/gpfs/commons/groups/nygcfaculty/PySeq/20210428_mouse_genotype_2/segmented_sections/m387ntga2_labels.tiff')
@@ -44,19 +42,11 @@ for i in im.im['channel'].values:
 
 
 
-#plane_mean_dict = {}
-#ar = array_object_list[0].values
-#tr = torch.from_numpy(ar)
-#lab = torch.from_numpy(labels)
-
-
-
 
 
 mx = labels.max()
 
 
-# In[10]:
 
 
 def get_mean_intensity(pl):

@@ -1,0 +1,719 @@
+/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/cli/dask_worker.py:334: FutureWarning: The --nprocs flag will be removed in a future release. It has been renamed to --nworkers.
+  warnings.warn(
+2022-06-30 13:01:58,959 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.202.117:35233'
+2022-06-30 13:01:58,993 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.202.117:37053'
+2022-06-30 13:01:58,994 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.202.117:36548'
+2022-06-30 13:01:58,995 - distributed.nanny - INFO -         Start Nanny at: 'tcp://10.4.202.117:43826'
+2022-06-30 13:02:04,235 - distributed.worker - INFO -       Start worker at:   tcp://10.4.202.117:34457
+2022-06-30 13:02:04,235 - distributed.worker - INFO -          Listening to:   tcp://10.4.202.117:34457
+2022-06-30 13:02:04,235 - distributed.worker - INFO -       Start worker at:   tcp://10.4.202.117:36465
+2022-06-30 13:02:04,235 - distributed.worker - INFO -          dashboard at:         10.4.202.117:45767
+2022-06-30 13:02:04,235 - distributed.worker - INFO -          Listening to:   tcp://10.4.202.117:36465
+2022-06-30 13:02:04,235 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:04,236 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:04,235 - distributed.worker - INFO -          dashboard at:         10.4.202.117:40814
+2022-06-30 13:02:04,236 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:04,236 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:02:04,236 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:04,236 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:02:04,236 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-9axv8hn2
+2022-06-30 13:02:04,236 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:02:04,236 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:04,236 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:02:04,236 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-p3jglslp
+2022-06-30 13:02:04,236 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:04,267 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:04,267 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:04,268 - distributed.core - INFO - Starting established connection
+2022-06-30 13:02:04,269 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:04,269 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:04,269 - distributed.core - INFO - Starting established connection
+2022-06-30 13:02:06,396 - distributed.worker - INFO -       Start worker at:   tcp://10.4.202.117:46501
+2022-06-30 13:02:06,396 - distributed.worker - INFO -          Listening to:   tcp://10.4.202.117:46501
+2022-06-30 13:02:06,396 - distributed.worker - INFO -          dashboard at:         10.4.202.117:36289
+2022-06-30 13:02:06,397 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:06,397 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:06,397 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:02:06,397 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:02:06,397 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-bysr367n
+2022-06-30 13:02:06,400 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:06,406 - distributed.worker - INFO -       Start worker at:   tcp://10.4.202.117:42733
+2022-06-30 13:02:06,407 - distributed.worker - INFO -          Listening to:   tcp://10.4.202.117:42733
+2022-06-30 13:02:06,407 - distributed.worker - INFO -          dashboard at:         10.4.202.117:36167
+2022-06-30 13:02:06,407 - distributed.worker - INFO - Waiting to connect to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:06,407 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:06,407 - distributed.worker - INFO -               Threads:                          3
+2022-06-30 13:02:06,407 - distributed.worker - INFO -                Memory:                  29.80 GiB
+2022-06-30 13:02:06,407 - distributed.worker - INFO -       Local Directory: /gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-6c77evet
+2022-06-30 13:02:06,407 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:06,423 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:06,423 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:06,423 - distributed.core - INFO - Starting established connection
+2022-06-30 13:02:06,435 - distributed.worker - INFO -         Registered to:    tcp://10.4.200.39:35830
+2022-06-30 13:02:06,436 - distributed.worker - INFO - -------------------------------------------------
+2022-06-30 13:02:06,437 - distributed.core - INFO - Starting established connection
+2022-06-30 13:04:20,387 - distributed.worker - INFO - Connection to scheduler broken. Closing without reporting.  Status: Status.running
+2022-06-30 13:04:20,387 - distributed.worker - INFO - Connection to scheduler broken. Closing without reporting.  Status: Status.running
+2022-06-30 13:04:20,387 - distributed.worker - INFO - Connection to scheduler broken. Closing without reporting.  Status: Status.running
+2022-06-30 13:04:20,388 - distributed.worker - INFO - Stopping worker at tcp://10.4.202.117:46501
+2022-06-30 13:04:20,388 - distributed.worker - INFO - Stopping worker at tcp://10.4.202.117:36465
+2022-06-30 13:04:20,388 - distributed.worker - INFO - Stopping worker at tcp://10.4.202.117:34457
+2022-06-30 13:04:20,388 - distributed.worker - INFO - Connection to scheduler broken. Closing without reporting.  Status: Status.running
+2022-06-30 13:04:20,389 - distributed.worker - INFO - Stopping worker at tcp://10.4.202.117:42733
+2022-06-30 13:04:20,391 - distributed.worker - WARNING - Heartbeat to scheduler failed
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/worker.py", line 1198, in heartbeat
+    response = await retry_operation(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 381, in retry_operation
+    return await retry(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 366, in retry
+    return await coro()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 975, in send_recv_from_rpc
+    return await send_recv(comm=comm, op=key, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 739, in send_recv
+    response = await comm.read(deserializers=deserializers)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) ConnectionPool.heartbeat_worker local=tcp://10.4.202.117:43946 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+2022-06-30 13:04:20,391 - distributed.worker - WARNING - Heartbeat to scheduler failed
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/worker.py", line 1198, in heartbeat
+    response = await retry_operation(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 381, in retry_operation
+    return await retry(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 366, in retry
+    return await coro()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 975, in send_recv_from_rpc
+    return await send_recv(comm=comm, op=key, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 739, in send_recv
+    response = await comm.read(deserializers=deserializers)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) ConnectionPool.heartbeat_worker local=tcp://10.4.202.117:43996 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+2022-06-30 13:04:20,392 - distributed.worker - WARNING - Heartbeat to scheduler failed
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/worker.py", line 1198, in heartbeat
+    response = await retry_operation(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 381, in retry_operation
+    return await retry(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 366, in retry
+    return await coro()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 975, in send_recv_from_rpc
+    return await send_recv(comm=comm, op=key, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 739, in send_recv
+    response = await comm.read(deserializers=deserializers)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) ConnectionPool.heartbeat_worker local=tcp://10.4.202.117:43976 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+2022-06-30 13:04:20,392 - distributed.worker - WARNING - Heartbeat to scheduler failed
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/worker.py", line 1198, in heartbeat
+    response = await retry_operation(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 381, in retry_operation
+    return await retry(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils_comm.py", line 366, in retry
+    return await coro()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 975, in send_recv_from_rpc
+    return await send_recv(comm=comm, op=key, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/core.py", line 739, in send_recv
+    response = await comm.read(deserializers=deserializers)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) ConnectionPool.heartbeat_worker local=tcp://10.4.202.117:44208 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+2022-06-30 13:04:22,569 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7f6add11b100>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:22,582 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7f96262a96a0>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:22,584 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7fd7fa9b1460>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43930 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43938 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43950 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:22,620 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7ff23aa14a30>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43934 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:24,689 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7f6ace195670>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:24,693 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7fd7ecec7a30>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:24,695 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7f96c4d20ac0>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43932 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43940 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43948 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:24,707 - distributed.diskutils - ERROR - Failed to remove '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-9axv8hn2' (failed in <built-in function lstat>): [Errno 2] No such file or directory: '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-9axv8hn2'
+2022-06-30 13:04:24,707 - distributed.diskutils - ERROR - Failed to remove '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-6c77evet' (failed in <built-in function lstat>): [Errno 2] No such file or directory: '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-6c77evet'
+2022-06-30 13:04:24,707 - distributed.diskutils - ERROR - Failed to remove '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-bysr367n' (failed in <built-in function lstat>): [Errno 2] No such file or directory: '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-bysr367n'
+2022-06-30 13:04:24,712 - distributed.nanny - INFO - Worker closed
+2022-06-30 13:04:24,713 - distributed.nanny - INFO - Worker closed
+2022-06-30 13:04:24,713 - distributed.nanny - ERROR - Worker process died unexpectedly
+2022-06-30 13:04:24,714 - distributed.nanny - INFO - Worker closed
+2022-06-30 13:04:24,714 - distributed.nanny - ERROR - Worker process died unexpectedly
+2022-06-30 13:04:24,715 - distributed.nanny - ERROR - Worker process died unexpectedly
+2022-06-30 13:04:24,730 - distributed.client - ERROR - 
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 289, in connect
+    comm = await asyncio.wait_for(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 479, in wait_for
+    return fut.result()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 451, in connect
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <distributed.comm.tcp.TCPConnector object at 0x7ff13c337490>: ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 867, in _read_to_buffer
+    bytes_read = self.read_from_fd(buf)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/tornado/iostream.py", line 1140, in read_from_fd
+    return self.socket.recv_into(buf, len(buf))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1406, in _handle_report
+    msgs = await self.scheduler_comm.comm.read()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 242, in read
+    convert_stream_closed_error(self, e)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/tcp.py", line 148, in convert_stream_closed_error
+    raise CommClosedError(f"in {obj}: {exc.__class__.__name__}: {exc}") from exc
+distributed.comm.core.CommClosedError: in <TCP (closed) Client->Scheduler local=tcp://10.4.202.117:43936 remote=tcp://10.4.200.39:35830>: ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1414, in _handle_report
+    await self._reconnect()
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/utils.py", line 761, in wrapper
+    return await func(*args, **kwargs)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1225, in _reconnect
+    await self._ensure_connected(timeout=timeout)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/client.py", line 1255, in _ensure_connected
+    comm = await connect(
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/site-packages/distributed/comm/core.py", line 313, in connect
+    await asyncio.sleep(backoff)
+  File "/gpfs/commons/home/jsingh/.conda/envs/spatial/lib/python3.9/asyncio/tasks.py", line 652, in sleep
+    return await future
+asyncio.exceptions.CancelledError
+2022-06-30 13:04:24,745 - distributed.diskutils - ERROR - Failed to remove '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-p3jglslp' (failed in <built-in function lstat>): [Errno 2] No such file or directory: '/gpfs/commons/home/jsingh/NYGC-PySeq2500-Pipeline/src/post/dask-worker-space/worker-p3jglslp'
+2022-06-30 13:04:24,750 - distributed.nanny - INFO - Worker closed
+2022-06-30 13:04:24,751 - distributed.nanny - ERROR - Worker process died unexpectedly
+2022-06-30 13:04:25,254 - distributed.nanny - INFO - Closing Nanny at 'tcp://10.4.202.117:36548'.
+2022-06-30 13:04:25,256 - distributed.nanny - INFO - Closing Nanny at 'tcp://10.4.202.117:43826'.
+2022-06-30 13:04:25,276 - distributed.nanny - INFO - Closing Nanny at 'tcp://10.4.202.117:35233'.
+2022-06-30 13:04:25,327 - distributed.nanny - INFO - Closing Nanny at 'tcp://10.4.202.117:37053'.
+2022-06-30 13:04:25,330 - distributed.dask_worker - INFO - End worker
