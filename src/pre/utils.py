@@ -35,12 +35,15 @@ def get_machine():
     return machine
 
 
+def parse_sections(file_path):
+    '''Return names of sections from experiment config file.'''
 
-def parse_sections(experiment_config_path):
-    # Create and read experiment config
-    experiment_config = get_config(experiment_config_path)
+    if isinstance(file_path, str):
+        file_path = Path(file_path)
 
-    # Get section names
-    sections = experiment_config.options('sections')
+    if file_path.suffix == '.cfg':
+        config = configparser.ConfigParser()
+        config.read(file_path)
+        sections = config.options('sections')
 
     return sections

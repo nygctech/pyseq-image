@@ -1,3 +1,6 @@
+import pathlib
+import configparser
+
 #dask.config.set({'temporary-directory': '/scratch'})
 def get_cluster(log_dir=None, queue_name = 'pi3', cores = 2, memory = '32G', walltime='1:00:00', **kwargs):
     """ Make dask cluster w/ workers = 2 cores, 32 G mem, and 1 hr wall time.
