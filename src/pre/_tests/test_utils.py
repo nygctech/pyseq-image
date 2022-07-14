@@ -1,7 +1,7 @@
 import pytest
 
 
-demo_sections = ['m1a', 'm2a', 'm3a', 'm1b', 'm2b', 'm3b']
+demo_sections = ['m1a', 'm3b']
 
 def test_parse_sections(exp_config_path):
 

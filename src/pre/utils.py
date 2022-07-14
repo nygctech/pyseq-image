@@ -8,14 +8,16 @@ def get_config(config_path):
     if isinstance(config_path, str):
         config_path = Path(config_path)
 
-    if config_path.exists():
+    if not config_path.exists():
+        raise OSError('config does not exist')
+
+    if config_path.suffix == '.cfg':
         # Create and read experiment config
         config = configparser.ConfigParser()
         config.read(config_path)
 
         return config
-    else:
-        return None
+
 
 
 def get_machine():
@@ -38,12 +40,7 @@ def get_machine():
 def parse_sections(file_path):
     '''Return names of sections from experiment config file.'''
 
-    if isinstance(file_path, str):
-        file_path = Path(file_path)
-
-    if file_path.suffix == '.cfg':
-        config = configparser.ConfigParser()
-        config.read(file_path)
-        sections = config.options('sections')
+    config = get_config(file_path)
+    sections = config.options('sections')
 
     return sections
