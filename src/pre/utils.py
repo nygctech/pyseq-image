@@ -41,13 +41,13 @@ def parse_sections(config):
     '''Return names of sections from experiment config file.'''
 
     if isinstance(config, str):
-        config = get_config(file_path)
+        config = get_config(config)
 
     return config.options('sections')
 
 def get_exp_name(config):
 
     if isinstance(config, str):
-        config = get_config(file_path)
+        config = get_config(config)
 
-    return = config.get('experiment', 'experiment name')
+    return config.get('experiment', 'experiment name')
