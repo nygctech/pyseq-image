@@ -37,10 +37,17 @@ def get_machine():
     return machine
 
 
-def parse_sections(file_path):
+def parse_sections(config):
     '''Return names of sections from experiment config file.'''
 
-    config = get_config(file_path)
-    sections = config.options('sections')
+    if isinstance(config, str):
+        config = get_config(file_path)
 
-    return sections
+    return config.options('sections')
+
+def get_exp_name(config):
+
+    if isinstance(config, str):
+        config = get_config(file_path)
+
+    return = config.get('experiment', 'experiment name')

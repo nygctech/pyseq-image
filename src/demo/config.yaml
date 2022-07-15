@@ -1,1 +1,2 @@
 experiment_config_path: demo_exp_config.cfg
+output_directory: ~/

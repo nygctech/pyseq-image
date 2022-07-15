@@ -1,13 +1,21 @@
 from pyseq_pipeline.pre import utils
+from os.path import join
 
 configfile: 'config.yaml'
 
 
+exp_config = utils.get_config(configfile['experiment_config_path'])
+experiment_name = utils.get_exp_name(exp_config)
+
+output_dir = join(configfile['output_directory'], experiment_name)
+
 rule fix_lighting:
     input:
-        sections = utils.parse_sections(configfile['experiment_config_path'])
+        sections = utils.parse_sections(exp_config)
+    params:
+        save_path = {output_dir}
     output:
-        temp(processed_zarr/{sections}.zarr,
-             processed_zarr/{sections}.attr)
+        temp({output_dir}/processed_zarr/{sections}.zarr,
+             {output_dir}/processed_zarr/{sections}.attr)
     script:
         scripts/preprocess.py

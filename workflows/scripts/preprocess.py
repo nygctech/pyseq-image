@@ -1,4 +1,4 @@
-from pyseq_pipeline import pre
+from pyseq import image_analysis as ia
 
 experiment_config_path = snakemake.config['experiment_config_path']
 experiment_config = pre.utils.get_config(experiment_config_path)
@@ -9,4 +9,4 @@ image = ia.get_HiSeqImages(image_path = image_path, common_name = section_name)
 
 image.correct_background()
 
-image.save_zarr(snakemake.output[0])
+image.save_zarr(snakemake.params[0])
