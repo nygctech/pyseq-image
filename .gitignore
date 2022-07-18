@@ -131,3 +131,4 @@ dmypy.json
 
 # snakemake stuff
 workflows/.snakemake/*
+workflows/*.out

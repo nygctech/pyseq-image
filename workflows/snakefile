@@ -20,10 +20,10 @@ rule fix_lighting:
     input:
         {exp_config}
     params:
-        save_path = output_dir,
+        save_path = join(output_dir,'processed_zarr'),
         section = '{sections}'
     output:
-        '{output_dir}/processed_zarr/{sections}.zarr',
-        '{output_dir}/processed_zarr/{sections}.attr'
+        directory('{output_dir}/processed_zarr/{sections}.zarr')
+       # '{output_dir}/processed_zarr/{sections}.attrs'
     script:
         'scripts/preprocess.py'

@@ -15,3 +15,5 @@ image = ia.get_HiSeqImages(image_path = image_path, common_name = section_name)
 image.correct_background()
 
 image.save_zarr(snakemake.params.save_path)
+
+print(image.machine)
