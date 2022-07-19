@@ -1,5 +1,9 @@
 import pathlib
 import configparser
+from os.path import join
+from os import getcwd, makedirs
+from dask_jobqueue import SLURMCluster
+from dask.distributed import Client
 
 #dask.config.set({'temporary-directory': '/scratch'})
 def get_cluster(log_dir=None, queue_name = 'pi3', cores = 2, memory = '32G', walltime='1:00:00', **kwargs):

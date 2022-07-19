@@ -729,17 +729,17 @@ class HiSeqImages():
 
         return img
 
-    def update_crop_bb(cropp_bb, shift):
+    def update_crop_bb(self, crop_bb, shift):
 
         if shift[0] < 0:
-            crop_bb[1] = max(crop_bb[1], -shift[1])
+            crop_bb[1] = max(crop_bb[1], ceil(-shif[0]))
         else:
-            crop_bb[0] = max(crop_bb[0], shift[0])
+            crop_bb[0] = max(crop_bb[0], ceil(shift[0]))
 
         if shift[1] < 0:
-            crop_bb[2] = max(crop_bb[2], -shift[0])
+            crop_bb[2] = max(crop_bb[2], ceil(-shift[1]))
         else:
-            crop_bb[3] = max(crop_bb[3], shift[0])
+            crop_bb[3] = max(crop_bb[3], ceil(shift[1]))
 
         return crop_bb
 
@@ -773,7 +773,7 @@ class HiSeqImages():
                 A[0,2] = shift[1]
                 A[1,2] = shift[0]
                 reg_dict[int(ch)]=A
-                crop_bb = self.update_crop_bb(shift)
+                crop_bb = self.update_crop_bb(crop_bb, shift)
 
                 print(f'Channel {ch} :: {shift}')
 
@@ -797,8 +797,8 @@ class HiSeqImages():
 
         # assert that selecting all coords results in 2D image
 
-        dims = list(coords.keys())
-        max_dim_depth = len(coords)
+        dims = list(self.im.coords.keys())
+        max_dim_depth = len(self.im.coords)
 
         if dim_depth is None:
             dim_depth = 0
@@ -812,27 +812,27 @@ class HiSeqImages():
         dim_stack[dim] = []
 
         # Loop over coords recursively
-        for value in coords[dim]:
+        for value in self.im.coords[dim]:
             sel_dict[dim] = value
 
             if dim_depth < max_dim_depth-1:
-                test_rec(dim_depth + 1, sel_dict, dim_stack)
+                self.apply_full(func, dim_depth + 1, sel_dict, dim_stack, args, kwargs)
             else:
                 # apply function to
-                image = im.sel(sel_dict)
+                image = self.im.sel(sel_dict)
                 assert len(image.shape) == 2, 'More than 2 dimensions do not have coordinates'
                 image = func(image, *args, **kwargs)
 
             # save plane in stack
             if dim == dims[-1]:
-                dim_stack[im].append(image)
+                dim_stack[dim].append(image)
 
         # stack dimensions
         if dim != dims[0]:
             higher_dim = dims[dim_depth-1]
-            dim_stack[higher_dim].append(xr.stack(dim_stack[dim], dim))
+            dim_stack[higher_dim].append(xr.concat(dim_stack[dim], dim))
         else:
-            return xr.stack(dim_stack[dim], dim)
+            return xr.concat(dim_stack[dim], dim)
 
 
 
@@ -853,12 +853,14 @@ class HiSeqImages():
 
         rows = len(image.row); cols = len(image.col)
         rows_ = slice(crop_bb[0], rows-crop_bb[1])
-        cols_ = slice(crop_bb[3], cols-crop_bb[3])
+        cols_ = slice(crop_bb[2], cols-crop_bb[3])
+        ch = int(image.channel.values)
 
         # Affine transformation
-        if ch in reg_dict.keys()
+        if ch in reg_dict.keys():
             coords = image.coords
-            image = affine_transform(image.data, reg_dict[ch], crop)
+            dims = image.dims
+            image = affine_transform(image.data, reg_dict[ch])
             image= xr.DataArray(image, dims = dims, coords = coords)
 
         # Crop image
