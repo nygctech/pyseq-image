@@ -3,27 +3,33 @@ import configparser
 from os.path import join
 from os import getcwd, makedirs
 from dask_jobqueue import SLURMCluster
-from dask.distributed import Client
 
 #dask.config.set({'temporary-directory': '/scratch'})
-def get_cluster(log_dir=None, queue_name = 'pi3', cores = 2, memory = '32G', walltime='1:00:00', **kwargs):
+def get_cluster(engine = 'SLURM', **kwargs):
     """ Make dask cluster w/ workers = 2 cores, 32 G mem, and 1 hr wall time.
 
-        return cluster, client
+        Parameters:
+            engine: name of workload manager. Only SLURM currently supported.
+
+
+        Returns:
+            cluster: dask cluster
     """
 
-    if log_dir is None:
-        log_dir = join(getcwd(),'dask_logs')
-        makedirs(log_dir, exist_ok=True)
+    assert engine in ['SLURM'], f'{engine} is not currently supported as a workload manager'
 
-    cluster = SLURMCluster(
-                queue = queue_name,
-                cores = 2,
-                memory = '32G',
-                walltime='1:00:00',
-                log_directory=log_dir,
-                extra=["--lifetime", "55m", "--lifetime-stagger", "4m"])
-    #client = Client(cluster)
+    if kwargs.get('log_directory', None) is None:
+        kwargs['log_directory'] = join(getcwd(),'dask_logs')
+        makedirs(kwargs['log_directory'], exist_ok=True)
+
+    if engine == 'SLURM':
+        cluster = SLURMCluster(**kwargs)
+                # queue = queue_name,
+                # cores = 2,
+                # memory = '32G',
+                # walltime='1:00:00',
+                # log_directory=log_dir,
+                # extra=["--lifetime", "55m", "--lifetime-stagger", "4m"])
 
     print('Cluster dashboard link::', cluster.dashboard_link)
 
