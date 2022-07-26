@@ -858,9 +858,15 @@ class HiSeqImages():
 
         # Affine transformation
         if ch in reg_dict.keys():
-            name = image.name; dims = image.dims; coords = image.coords
-            image = affine_transform(image.data, reg_dict[ch])
-            image= xr.DataArray(image, name = name, dims = dims, coords = coords)
+            registered =  affine_transform(image.data, reg_dict[ch])
+            image = xr.DataArray(registered, name = image.name, dims = image.dims,
+                                 coords = image.coords, attrs = image.attrs)
+
+        image = image.sel(row=rows_, col=cols_)
+
+        # Flip columns if left side of image cropped so irregular chunk is last
+        if crop_bb[2] > 0 and crop_bb[3] == 0:
+            image = image.sel(col=slice(None,None,-1))
 
         # Crop image
         return image.sel(row=rows_, col=cols_)
