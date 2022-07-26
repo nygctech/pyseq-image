@@ -23,8 +23,8 @@ def get_cluster(log_dir=None, queue_name = 'pi3', cores = 2, memory = '32G', wal
                 walltime='1:00:00',
                 log_directory=log_dir,
                 extra=["--lifetime", "55m", "--lifetime-stagger", "4m"])
-    client = Client(cluster)
+    #client = Client(cluster)
 
-    print(cluster.dashboard_link)
+    print('Cluster dashboard link::', cluster.dashboard_link)
 
-    return cluster, client
+    return cluster

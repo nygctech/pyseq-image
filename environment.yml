@@ -1,4 +1,4 @@
-name: pyseq_pipe
+name: 4ipyseq
 channels:
   - conda-forge
   - defaults

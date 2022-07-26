@@ -7,7 +7,7 @@ from dask.diagnostics import ProgressBar
 import xarray as xr
 xr.set_options(keep_attrs=True)
 import zarr
-import napari
+#import napari
 from math import log2, ceil, floor
 from os import listdir, stat, path, getcwd, mkdir
 from scipy import stats
@@ -17,7 +17,7 @@ import glob
 import configparser
 import time
 import tabulate
-from qtpy.QtCore import QTimer
+#from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
 
 from dask_image.ndinterp import affine_transform
@@ -858,10 +858,9 @@ class HiSeqImages():
 
         # Affine transformation
         if ch in reg_dict.keys():
-            coords = image.coords
-            dims = image.dims
+            name = image.name; dims = image.dims; coords = image.coords
             image = affine_transform(image.data, reg_dict[ch])
-            image= xr.DataArray(image, dims = dims, coords = coords)
+            image= xr.DataArray(image, name = name, dims = dims, coords = coords)
 
         # Crop image
         return image.sel(row=rows_, col=cols_)
