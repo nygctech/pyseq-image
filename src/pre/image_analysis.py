@@ -19,6 +19,7 @@ import time
 import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
+import yaml
 
 from dask_image.ndinterp import affine_transform
 
@@ -422,17 +423,25 @@ def get_machine_config(machine):
     config = configparser.ConfigParser()
     #config_path = pkg_resources.path(resources, 'background.cfg')
     homedir = path.expanduser('~')
-    config_path = path.join(homedir,'.pyseq2500','machine_settings.cfg')
 
-    if path.exists(config_path):
+    config_path = path.join(homedir,'.pyseq2500','machine_settings')
+    if path.exists(config_path+'.yaml'):
+        with open(config_path+'.yaml', 'r') as f:
+            config = yaml.safe_load(f).get(self.machine)
+        config = congfig.get(machine, None)
+        config_path = config_path + 'yaml'
+
+    elif path.exists(config_path+'.cfg'):
         with open(config_path,'r') as config_path_:
             config.read_file(config_path_)
 
         if machine not in config.options('machines'):
             print('Settings for', machine, 'do not exist')
             config = None
+        config_path = config_path + 'cfg'
+
     else:
-        print(config_path, 'not found')
+        print(f'Config not found at {config_path} not found')
         config = None
 
     return config, config_path
@@ -687,41 +696,48 @@ class HiSeqImages():
             elif machine is None:
                 message(self.logger, pre_msg+'Unknown machine')
 
-    def correct_background_2(test_im):
+    def correct_background_2(self):
+
+
 
         max_px = 4095
-        new_min_dict = {}
-        ncols = len(test_im.im.col)
+        #new_min_dict = {}
+        ncols = len(self.im.col)
+        nch = len(self.im.channel)
+        ncy = len(self.im.cycle)
+        nz = len(self.im.obj_step)
 
-        with open('export_yaml.yaml') as f:
-            doc = yaml.safe_load(f)
+        new_min_dict = self.config.get('background')
 
-        for ch in test_im.im.channel.values: 
-            val = doc["Origin"][ch]
-            new_min_dict.update({int(ch):val})
+
+
+        # for ch in self.im.channel.values:
+        #     val = doc[self.machine][ch]
+        #     new_min_dict.update({int(ch):val})
 
         ch_list = []
-        for ch in test_im.im.channel.values:    
-            i = 0
+        for ch in self.im.channel.values:
+            g = 0
             group_list = []
             for c in range(int(ncols/256)):
+
                 if c == 0:
-                    i = test_im.im.first_group
-                if i == 8:
-                    i = 0
-                group = test_im.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
+                    g = self.im.first_group
+                if g == 8:
+                    g = 0
+                group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
                 group_min = group.min()
                 new_min = new_min_dict[ch]
 
                 corrected = ((group-group_min)/(max_px - group_min) * (max_px - new_min) + new_min).astype('int16')
-                i += 1
+                g += 1
                 group_list.append(corrected)
             ch_list.append(xr.concat(group_list, dim='col'))
 
         img_mod = xr.concat(ch_list, dim='channel')
 
         return img_mod
-                
+
     def register_channels(self, image=None):
         """Register image channels."""
 
