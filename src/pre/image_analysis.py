@@ -687,7 +687,41 @@ class HiSeqImages():
             elif machine is None:
                 message(self.logger, pre_msg+'Unknown machine')
 
+    def correct_background_2(test_im):
 
+        max_px = 4095
+        new_min_dict = {}
+        ncols = len(test_im.im.col)
+
+        with open('export_yaml.yaml') as f:
+            doc = yaml.safe_load(f)
+
+        for ch in test_im.im.channel.values: 
+            val = doc["Origin"][ch]
+            new_min_dict.update({int(ch):val})
+
+        ch_list = []
+        for ch in test_im.im.channel.values:    
+            i = 0
+            group_list = []
+            for c in range(int(ncols/256)):
+                if c == 0:
+                    i = test_im.im.first_group
+                if i == 8:
+                    i = 0
+                group = test_im.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
+                group_min = group.min()
+                new_min = new_min_dict[ch]
+
+                corrected = ((group-group_min)/(max_px - group_min) * (max_px - new_min) + new_min).astype('int16')
+                i += 1
+                group_list.append(corrected)
+            ch_list.append(xr.concat(group_list, dim='col'))
+
+        img_mod = xr.concat(ch_list, dim='channel')
+
+        return img_mod
+                
     def register_channels(self, image=None):
         """Register image channels."""
 
