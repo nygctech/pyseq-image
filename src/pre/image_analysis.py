@@ -696,33 +696,37 @@ class HiSeqImages():
             elif machine is None:
                 message(self.logger, pre_msg+'Unknown machine')
 
-def correct_background_2(self):
-    
-    max_px = 4095
-    max_px_dot = [max_px] * 2048
-    ncols = len(self.im.col)     
-    new_min_dict = self.config.get('background')
+    def correct_background_2(self):
+        '''Corrects background.
+        '''
         
-    ch_list = []        
-    for ch in self.im.channel.values:    
-        new_min = new_min_dict[ch]
-        new_min_dot = [new_min] * ncols
-        
-        group_min_dot = []
-        for c in range(int(ncols/256)):
-            group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
-            group_min = group.min()
-            group_min_dot += [group_min.values] * 256
-            
-        array_1 = np.subtract(max_px_dot, group_min_dot)
-        array_2 = np.array([max_px - new_min] * ncols)
-        plane = self.im.sel(channel=ch)
-        corrected = (((plane-group_min_dot)/array_1 * array_2) +  new_min_dot).astype('int16')
-        ch_list.append(corrected)
-    
-    img_mod = xr.concat(ch_list, dim='channel')
-        
-    return img_mod
+
+        new_min_dict = self.config.get('background')
+        max_px = self.config.get('max_pixel_value')
+
+        max_px_dot = [max_px] * 2048
+        ncols = len(self.im.col)
+
+        ch_list = []
+        for ch in self.im.channel.values:
+            new_min = new_min_dict[ch]
+            new_min_ = [new_min] * ncols
+
+            group_min_ = []
+            for c in range(int(ncols/256)):
+                group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
+                group_min = group.min()
+                group_min_ += [int(group_min.values)] * 256
+
+            old_contrast = np.subtract(max_px_dot, group_min_)
+            new_contrast = np.array([max_px - new_min] * ncols)
+            plane = self.im.sel(channel=ch)
+            corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
+            ch_list.append(corrected)
+
+        img_mod = xr.concat(ch_list, dim='channel')
+
+        return img_mod
 
     def register_channels(self, image=None):
         """Register image channels."""
