@@ -696,49 +696,7 @@ class HiSeqImages():
             elif machine is None:
                 message(self.logger, pre_msg+'Unknown machine')
 
-    def correct_background_2(self):
-
-
-
-        max_px = 4095
-        #new_min_dict = {}
-        ncols = len(self.im.col)
-        nch = len(self.im.channel)
-        ncy = len(self.im.cycle)
-        nz = len(self.im.obj_step)
-
-        new_min_dict = self.config.get('background')
-
-
-
-        # for ch in self.im.channel.values:
-        #     val = doc[self.machine][ch]
-        #     new_min_dict.update({int(ch):val})
-
-        ch_list = []
-        for ch in self.im.channel.values:
-            g = 0
-            group_list = []
-            for c in range(int(ncols/256)):
-
-                if c == 0:
-                    g = self.im.first_group
-                if g == 8:
-                    g = 0
-                group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
-                group_min = group.min()
-                new_min = new_min_dict[ch]
-
-                corrected = ((group-group_min)/(max_px - group_min) * (max_px - new_min) + new_min).astype('int16')
-                g += 1
-                group_list.append(corrected)
-            ch_list.append(xr.concat(group_list, dim='col'))
-
-        img_mod = xr.concat(ch_list, dim='channel')
-
-        return img_mod
-
-def correct_background_3(self):
+def correct_background_2(self):
     
     max_px = 4095
     max_px_dot = [max_px] * 2048
