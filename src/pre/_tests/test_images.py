@@ -9,9 +9,12 @@ image_path = '/nethome/kpandit/NYGC-PySeq2500-Pipeline/src/demo/'
 def demo_image():
     image_path = Path(ia.__file__).parents[2] / Path('src/demo/images')
     # Reads 2 sections; m1a and m3b, return 1 it doesn't matter which
-    ims = ia.get_HiSeqImage(image_path) 
-
-    return ims[0]
+    ims = ia.get_HiSeqImages(str(image_path)) 
+    im = ims[0]
+    im.machine = im.im.machine
+    im.config, config_path = ia.get_machine_config(im.machine)
+    
+    return im
 
 
 

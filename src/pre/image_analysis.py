@@ -418,7 +418,7 @@ def get_HiSeqImages(image_path=None, common_name='', logger = None):
 def get_machine_config(machine):
 
 
-    machine = str(machine).lower()
+    #machine = str(machine).lower()
 
     config = configparser.ConfigParser()
     #config_path = pkg_resources.path(resources, 'background.cfg')
@@ -427,18 +427,19 @@ def get_machine_config(machine):
     config_path = path.join(homedir,'.pyseq2500','machine_settings')
     if path.exists(config_path+'.yaml'):
         with open(config_path+'.yaml', 'r') as f:
-            config = yaml.safe_load(f).get(self.machine)
-        config = congfig.get(machine, None)
-        config_path = config_path + 'yaml'
+            config = yaml.safe_load(f).get(machine, None)
+        config_path = config_path + '.yaml'
 
     elif path.exists(config_path+'.cfg'):
+        machine = str(machine).lower()
+
         with open(config_path,'r') as config_path_:
             config.read_file(config_path_)
 
         if machine not in config.options('machines'):
             print('Settings for', machine, 'do not exist')
             config = None
-        config_path = config_path + 'cfg'
+        config_path = config_path + '.cfg'
 
     else:
         print(f'Config not found at {config_path} not found')
