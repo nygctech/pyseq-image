@@ -15,7 +15,7 @@ def demo_image():
 
 
 
-def test_correct_background():
+def test_correct_background(demo_image):
 
     raw_image = demo_image.im
     corrected_im = demo_image.correct_background_2()
