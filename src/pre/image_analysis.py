@@ -725,6 +725,7 @@ class HiSeqImages():
             ch_list.append(corrected)
 
         img_mod = xr.concat(ch_list, dim='channel')
+        self.im = img_mod
 
         return img_mod
 
