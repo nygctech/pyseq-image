@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-image_path = '/nethome/kpandit/NYGC-PySeq2500-Pipeline/src/demo/'
 
 @pytest.fixture
 def demo_image():
