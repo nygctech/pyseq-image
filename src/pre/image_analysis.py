@@ -732,12 +732,12 @@ class HiSeqImages():
     def update_crop_bb(self, crop_bb, shift):
 
         if shift[0] < 0:
-            crop_bb[1] = max(crop_bb[1], ceil(-shif[0]))
+            crop_bb[1] = max(crop_bb[1], floor(-shift[0]))
         else:
             crop_bb[0] = max(crop_bb[0], ceil(shift[0]))
 
         if shift[1] < 0:
-            crop_bb[2] = max(crop_bb[2], ceil(-shift[1]))
+            crop_bb[2] = max(crop_bb[2], floor(-shift[1]))
         else:
             crop_bb[3] = max(crop_bb[3], ceil(shift[1]))
 
@@ -770,8 +770,8 @@ class HiSeqImages():
                         raise ValueError(f'Registration shift {v} for channel {ch} is invalid')
 
                 A = np.identity(3)
-                A[0,2] = shift[1]
-                A[1,2] = shift[0]
+                A[0,2] = -shift[0]
+                A[1,2] = -shift[1]
                 reg_dict[int(ch)]=A
                 crop_bb = self.update_crop_bb(crop_bb, shift)
 
