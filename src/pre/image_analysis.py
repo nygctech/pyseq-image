@@ -754,7 +754,21 @@ class HiSeqImages():
 
         return self.im
 
-    def register_channels(self, image=None):
+    def register_channels(self):
+        # Maintain compatibility with older config files and
+        # background correction parameters meant for subtraction
+        if isinstance(self.config, configparser.ConfigParser):
+            im = self.register_channels_shift()
+        # YAML config with background correction parameters meant for rescaling
+        elif isinstance(self.config, dict):
+            im = self.register_channels_affine()
+        else:
+            print('Invalid config')
+            im = None
+
+        return im
+
+    def register_channels_shift(self, image=None):
         """Register image channels."""
 
         if image is None:
@@ -939,7 +953,7 @@ class HiSeqImages():
 
 
 
-    def register_channels2(self):
+    def register_channels_affine(self):
 
         print('='*80)
         print('Registering Channels...')
@@ -952,7 +966,7 @@ class HiSeqImages():
         print(self.im)
         print('='*80)
 
-
+        return self.im
 
 
     def normalize(self, dims=['channel']):
