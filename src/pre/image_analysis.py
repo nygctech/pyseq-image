@@ -1182,7 +1182,7 @@ class HiSeqImages():
                                          blending = 'additive')
 
 
-    def save_zarr(self, save_path, show_progress = True, name=None):
+    def save_zarr(self, save_path, show_progress = True, name=None, **kwargs):
         """Save all sections in a zipped zarr store.
 
            Note that coordinates for unused dimensions are not saved.
@@ -1206,9 +1206,9 @@ class HiSeqImages():
 
         if show_progress:
             with ProgressBar() as pbar:
-                self.im.to_dataset().to_zarr(save_name)
+                output = self.im.to_dataset().to_zarr(save_name, **kwargs)
         else:
-            self.im.to_dataset().to_zarr(save_name)
+            output = self.im.to_dataset().to_zarr(save_name, **kwargs)
 
 
         # save attributes
@@ -1216,6 +1216,8 @@ class HiSeqImages():
         for key, val in self.im.attrs.items():
             f.write(str(key)+' '+str(val)+'\n')
         f.close()
+
+        return output
 
     def open_zarr(self):
         """Create labeled dataset from zarrs.
