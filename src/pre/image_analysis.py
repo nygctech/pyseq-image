@@ -427,7 +427,7 @@ def get_machine_config(machine):
         if path.exists(p+'.yaml'):
             config_path = p+'.yaml'
             break
-        elif path.exists(config_path+'.cfg'):
+        elif path.exists(p+'.cfg'):
             config_path = p+'.cfg'
             break
 
