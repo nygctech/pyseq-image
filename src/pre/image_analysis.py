@@ -441,7 +441,7 @@ def get_machine_config(machine):
     elif config_path[-3:] == 'cfg':
         machine = str(machine).lower()
         config = configparser.ConfigParser()
-        with open(config_path+'.cfg','r') as config_path_:
+        with open(config_path,'r') as config_path_:
             config.read_file(config_path_)
         if machine not in config.options('machines'):
             config = None
