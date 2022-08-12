@@ -19,6 +19,7 @@ import time
 import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
+import yaml
 
 from dask_image.ndinterp import affine_transform
 
@@ -416,24 +417,37 @@ def get_HiSeqImages(image_path=None, common_name='', logger = None):
 
 def get_machine_config(machine):
 
-
-    machine = str(machine).lower()
-
-    config = configparser.ConfigParser()
-    #config_path = pkg_resources.path(resources, 'background.cfg')
     homedir = path.expanduser('~')
-    config_path = path.join(homedir,'.pyseq2500','machine_settings.cfg')
 
-    if path.exists(config_path):
-        with open(config_path,'r') as config_path_:
-            config.read_file(config_path_)
+    config_paths = [path.join(homedir,'.config', 'pyseq2500', 'machine_settings'),
+                    path.join(homedir,'.pyseq2500','machine_settings')]
 
-        if machine not in config.options('machines'):
-            print('Settings for', machine, 'do not exist')
-            config = None
-    else:
-        print(config_path, 'not found')
+    config_path = None
+    for p in config_paths:
+        if path.exists(p+'.yaml'):
+            config_path = p+'.yaml'
+            break
+        elif path.exists(config_path+'.cfg'):
+            config_path = p+'.cfg'
+            break
+
+    if config_path is None:
+        print(f'Config not found')
         config = None
+
+    if config_path[-4:] == 'yaml':
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f).get(machine, None)
+    elif config_path[-3:] == 'cfg':
+        machine = str(machine).lower()
+        config = configparser.ConfigParser()
+        with open(config_path+'.cfg','r') as config_path_:
+            config.read_file(config_path_)
+        if machine not in config.options('machines'):
+            config = None
+
+    if config is None:
+        print('Settings for', machine, 'do not exist')
 
     return config, config_path
 
@@ -599,6 +613,8 @@ class HiSeqImages():
 
             if image_path is None:
                 image_path = getcwd()
+            else:
+                image_path = str(image_path)
 
             # Get machine config
             name_path = path.join(image_path,'machine_name.txt')
@@ -650,10 +666,28 @@ class HiSeqImages():
                 message(self.logger, 'Opened', *section_names)
 
         else:
+            self.machine = im.machine
+            if im.machine is not None:
+                self.config, config_path = get_machine_config(im.machine)
             self.im = im
 
-
     def correct_background(self):
+        # Maintain compatibility with older config files and
+        # background correction parameters meant for subtraction
+        if isinstance(self.config, configparser.ConfigParser):
+            im = self.correct_background_subtract()
+        # YAML config with background correction parameters meant for rescaling
+        elif isinstance(self.config, dict):
+            im = self.correct_background_rescale()
+        else:
+            print('Invalid config')
+            im = None
+
+        return im
+
+
+    def correct_background_subtract(self):
+        '''Subtract background from all groups to average background value.'''
 
         machine = self.machine
         if not bool(self.im.fixed_bg) and machine is not None:
@@ -687,6 +721,38 @@ class HiSeqImages():
             elif machine is None:
                 message(self.logger, pre_msg+'Unknown machine')
 
+        return self.im
+
+    def correct_background_rescale(self):
+        '''Rescale pixel values for each group to the average background.'''
+
+
+        new_min_dict = self.config.get('background')
+        max_px = self.config.get('max_pixel_value')
+
+        max_px_dot = [max_px] * 2048
+        ncols = len(self.im.col)
+
+        ch_list = []
+        for ch in self.im.channel.values:
+            new_min = new_min_dict[ch]
+            new_min_ = [new_min] * ncols
+
+            group_min_ = []
+            for c in range(int(ncols/256)):
+                group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
+                group_min = group.min()
+                group_min_ += [int(group_min.values)] * 256
+
+            old_contrast = np.subtract(max_px_dot, group_min_)
+            new_contrast = np.array([max_px - new_min] * ncols)
+            plane = self.im.sel(channel=ch)
+            corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
+            ch_list.append(corrected)
+
+        self.im = xr.concat(ch_list, dim='channel')
+
+        return self.im
 
     def register_channels(self, image=None):
         """Register image channels."""
