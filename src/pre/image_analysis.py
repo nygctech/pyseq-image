@@ -1216,6 +1216,8 @@ class HiSeqImages():
             f.write(str(key)+' '+str(val)+'\n')
         f.close()
 
+        return output
+
     def open_zarr(self):
         """Create labeled dataset from zarrs.
 
