@@ -1,5 +1,6 @@
 import configparser
 from pathlib import Path
+import yaml
 
 
 
@@ -15,6 +16,12 @@ def get_config(config_path):
         # Create and read experiment config
         config = configparser.ConfigParser()
         config.read(config_path)
+
+        return config
+
+    if config_path.suffix in ['.yaml', '.yml']:
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
 
         return config
 

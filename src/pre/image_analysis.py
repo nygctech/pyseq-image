@@ -830,24 +830,19 @@ class HiSeqImages():
 
         # Get registration data
         machine = self.machine
-        config_section = str(machine)+'registration'
+        reg_config = self.config.get(machine, {}).get('registration', None)
 
         print(f'{machine} registration data')
 
         reg_dict = {}
         crop_bb = [top, bottom, left, right]
 
-        if self.config.has_section(config_section):
-            # Format values from config
-            for ch, values in self.config.items(config_section):
-                shift = []
-                values = values.split(',')
-                assert len(values) == 2
-                for v in values:
-                    try:
-                        shift.append(float(v))
-                    except:
-                        raise ValueError(f'Registration shift {v} for channel {ch} is invalid')
+        if reg_config is not None:
+            for ch, shift in reg_config.items():
+
+                assert len(shift) == 2
+                for s in shift:
+                    assert type(shift) in [int, float], f'Registration shift {s} for channel {ch} is invalid'
 
                 A = np.identity(3)
                 A[0,2] = -shift[0]
@@ -857,7 +852,9 @@ class HiSeqImages():
 
                 print(f'Channel {ch} :: {shift}')
 
-            print('Crop bounding box ::', crop_bb, '(top, bottom, left, right)')
+            print('Crop bounding box ::', crop_bb, '(top, bottom, left, right)
+        else:
+            raise ValueError(f'Registration data for {machine} not found')
 
         return reg_dict, crop_bb
 
