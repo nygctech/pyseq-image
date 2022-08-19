@@ -458,8 +458,6 @@ def get_machine_config(machine, extra_config_path = ''):
 
     config = get_config(config_path)
 
-    print(config)
-
     if config_path[-4:] == 'yaml':
         config = config.get(machine, None)
     elif config_path[-3:] == 'cfg':
@@ -751,8 +749,9 @@ class HiSeqImages():
         new_min_dict = self.config.get('background')
         max_px = self.config.get('max_pixel_value')
 
-        max_px_dot = [max_px] * 2048
         ncols = len(self.im.col)
+        max_px_dot = [max_px] * ncols
+
 
         ch_list = []
         for ch in self.im.channel.values:
