@@ -963,6 +963,7 @@ class HiSeqImages():
         if crop_bb[2] > 0 and crop_bb[3] == 0:
             # Flip columns if left side of image cropped so irregular chunk is last
             image = image.sel(col=slice(None,None,-1))
+            cols_ = slice(0, cols-crop_bb[2])
         elif crop_bb[2] > 0 and crop_bb[3] > 0:
             # Don't crop both left and right side, only right so only 1 irregular chunk and is last
             cols_ = slice(0, cols-crop_bb[3])
