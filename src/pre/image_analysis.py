@@ -895,8 +895,8 @@ class HiSeqImages():
 
         # assert that selecting all coords results in 2D image
 
-        dims = list(self.im.coords.keys())
-        max_dim_depth = len(self.im.coords)
+        dims = [d for d in self.im.dims if d in self.im.coords.keys()]
+        max_dim_depth = len(dims)
 
         if dim_depth is None:
             dim_depth = 0
