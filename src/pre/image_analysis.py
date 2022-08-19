@@ -851,7 +851,7 @@ class HiSeqImages():
         # Get registration data
         reg_config = self.config.get('registration', None)
 
-        print(f'{machine} registration data')
+        print(f'{self.machine} registration data')
 
         reg_dict = {}
         crop_bb = [top, bottom, left, right]
