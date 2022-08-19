@@ -20,6 +20,7 @@ import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
 import yaml
+from pre.utils import get_config
 
 from dask_image.ndinterp import affine_transform
 
@@ -415,12 +416,29 @@ def get_HiSeqImages(image_path=None, common_name='', logger = None):
         return None
 
 
-def get_machine_config(machine):
+def get_machine_config(machine, extra_config_path = ''):
+    '''Get machine settings config from default location.
+
+      Default locations in order of preference:
+      - ~/.config/pyseq2500/machine_settings.yaml
+      - ~/.config/pyseq2500/machine_settings.cfg
+      - ~/.pyseq2500/machine_settings.yaml
+      - ~/.pyseq2500/machine_settings.cfg
+
+      Parameters:
+      machine (str): Name of machine
+      extra_config_path (str): Path to machine setting if not in defaul location
+
+      Returns:
+      config: Machine settings config (ConfigParser or YAML)
+      config_path: Machine settings config path (str)
+    '''
 
     homedir = path.expanduser('~')
 
     config_paths = [path.join(homedir,'.config', 'pyseq2500', 'machine_settings'),
                     path.join(homedir,'.pyseq2500','machine_settings')]
+    config_paths.insert(0, extra_config_path)
 
     config_path = None
     for p in config_paths:
@@ -430,19 +448,22 @@ def get_machine_config(machine):
         elif path.exists(p+'.cfg'):
             config_path = p+'.cfg'
             break
+        elif path.exists(p):
+            config_path = p
+            break
 
     if config_path is None:
         print(f'Config not found')
         config = None
 
+    config = get_config(config_path)
+
+    print(config)
+
     if config_path[-4:] == 'yaml':
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f).get(machine, None)
+        config = config.get(machine, None)
     elif config_path[-3:] == 'cfg':
         machine = str(machine).lower()
-        config = configparser.ConfigParser()
-        with open(config_path,'r') as config_path_:
-            config.read_file(config_path_)
         if machine not in config.options('machines'):
             config = None
 
@@ -829,8 +850,7 @@ class HiSeqImages():
         img = self.im
 
         # Get registration data
-        machine = self.machine
-        reg_config = self.config.get(machine, {}).get('registration', None)
+        reg_config = self.config.get('registration', None)
 
         print(f'{machine} registration data')
 
@@ -852,7 +872,7 @@ class HiSeqImages():
 
                 print(f'Channel {ch} :: {shift}')
 
-            print('Crop bounding box ::', crop_bb, '(top, bottom, left, right)
+            print('Crop bounding box ::', crop_bb, '(top, bottom, left, right)')
         else:
             raise ValueError(f'Registration data for {machine} not found')
 
@@ -1191,29 +1211,32 @@ class HiSeqImages():
 
         if not path.isdir(save_path):
 
-        if name is None:
-            save_name = path.join(save_path,self.im.name+'.zarr')
-        else:
-            save_name = path.join(save_path,str(name)+'.zarr')
-        # Remove coordinate for unused dimensions
-        for c in self.im.coords.keys():
-            if c not in self.im.dims:
-                self.im = self.im.reset_coords(names=c, drop=True)
+            if name is None:
+                save_name = path.join(save_path,self.im.name+'.zarr')
+            else:
+                save_name = path.join(save_path,str(name)+'.zarr')
+            # Remove coordinate for unused dimensions
+            for c in self.im.coords.keys():
+                if c not in self.im.dims:
+                    self.im = self.im.reset_coords(names=c, drop=True)
 
-        if show_progress:
-            with ProgressBar() as pbar:
+            if show_progress:
+                with ProgressBar() as pbar:
+                    output = self.im.to_dataset().to_zarr(save_name, **kwargs)
+            else:
                 output = self.im.to_dataset().to_zarr(save_name, **kwargs)
+
+
+            # save attributes
+            f = open(path.join(save_path, self.im.name+'.attrs'),"w")
+            for key, val in self.im.attrs.items():
+                f.write(str(key)+' '+str(val)+'\n')
+            f.close()
+
+            return output
+
         else:
-            output = self.im.to_dataset().to_zarr(save_name, **kwargs)
-
-
-        # save attributes
-        f = open(path.join(save_path, self.im.name+'.attrs'),"w")
-        for key, val in self.im.attrs.items():
-            f.write(str(key)+' '+str(val)+'\n')
-        f.close()
-
-        return output
+            raise ValueError(f'{save_path} is not an existing directory')
 
     def open_zarr(self):
         """Create labeled dataset from zarrs.
