@@ -1210,7 +1210,7 @@ class HiSeqImages():
 
         """
 
-        if not path.isdir(save_path):
+        if path.isdir(save_path):
 
             if name is None:
                 save_name = path.join(save_path,self.im.name+'.zarr')
