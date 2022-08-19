@@ -950,8 +950,6 @@ class HiSeqImages():
         '''
 
         rows = len(image.row); cols = len(image.col)
-        rows_ = slice(crop_bb[0], rows-crop_bb[1])
-        cols_ = slice(crop_bb[2], cols-crop_bb[3])
         ch = int(image.channel.values)
 
         # Affine transformation
@@ -960,11 +958,14 @@ class HiSeqImages():
             image = xr.DataArray(registered, name = image.name, dims = image.dims,
                                  coords = image.coords, attrs = image.attrs)
 
-        image = image.sel(row=rows_, col=cols_)
-
-        # Flip columns if left side of image cropped so irregular chunk is last
+        cols_ = slice(crop_bb[2], cols-crop_bb[3])
+        rows_ = slice(crop_bb[0], rows-crop_bb[1])
         if crop_bb[2] > 0 and crop_bb[3] == 0:
+            # Flip columns if left side of image cropped so irregular chunk is last
             image = image.sel(col=slice(None,None,-1))
+        elif crop_bb[2] > 0 and crop_bb[3] > 0:
+            # Don't crop both left and right side, only right so only 1 irregular chunk and is last
+            cols_ = slice(crop_bb[2], cols)
 
         # Crop image
         return image.sel(row=rows_, col=cols_)
