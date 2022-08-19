@@ -860,8 +860,10 @@ class HiSeqImages():
             for ch, shift in reg_config.items():
 
                 assert len(shift) == 2
-                for s in shift:
-                    assert type(shift) in [int, float], f'Registration shift {s} for channel {ch} is invalid'
+                try:
+                    shift = [float(s) for s in shift]
+                except:
+                    print(f'Registration shift {shift} for channel {ch} is invalid')
 
                 A = np.identity(3)
                 A[0,2] = -shift[0]
