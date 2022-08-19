@@ -965,7 +965,7 @@ class HiSeqImages():
             image = image.sel(col=slice(None,None,-1))
         elif crop_bb[2] > 0 and crop_bb[3] > 0:
             # Don't crop both left and right side, only right so only 1 irregular chunk and is last
-            cols_ = slice(crop_bb[2], cols)
+            cols_ = slice(0, cols-crop_bb[3])
 
         # Crop image
         return image.sel(row=rows_, col=cols_)
