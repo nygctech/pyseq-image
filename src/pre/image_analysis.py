@@ -20,7 +20,8 @@ import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
 import yaml
-from pre.utils import get_config
+from pre.utils import get_config, get_logger
+import logging
 
 from dask_image.ndinterp import affine_transform
 
@@ -31,6 +32,9 @@ except ImportError:
     import importlib_resources as pkg_resources
 #from . import resources
 #from .methods import userYN
+
+module_logger = logging.getLogger('ImageAnalysis')
+
 
 def message(logger, *args):
     """Print output text to logger or console.
@@ -47,7 +51,7 @@ def message(logger, *args):
     if logger is None:
         print(msg)
     else:
-        logger.info(msg)
+        module.info(msg)
 
 
 def sum_images(images, logger = None, **kwargs):
@@ -601,7 +605,7 @@ class HiSeqImages():
     """
 
     def __init__(self, image_path=None, common_name='',  im=None,
-                       obj_stack=None, RoughScan = False, logger = None):
+                       obj_stack=None, RoughScan = False, **kwargs):
         """The constructor for HiSeq Image Datasets.
 
            **Parameters:**
@@ -621,7 +625,7 @@ class HiSeqImages():
         self.stop = False
         self.app = None
         self.viewer = None
-        self.logger = logger
+        self.logger = get_logger('HiSeqImage', **kwargs)
         self.filenames = []
         self.resolution = 0.375                                                 # um/px
         self.x_spum = 0.4096                                                    #steps per um
@@ -699,7 +703,7 @@ class HiSeqImages():
         elif isinstance(self.config, dict):
             im = self.correct_background_rescale()
         else:
-            print('Invalid config')
+            self.logger.warning('CorrectBackground::Invalid config')
             im = None
 
         return im
@@ -736,9 +740,9 @@ class HiSeqImages():
         else:
             pre_msg='CorrectBackground::'
             if bool(self.im.fixed_bg):
-                message(self.logger, pre_msg+'Image already background corrected.')
+                self.logger.info(pre_msg+'Image already background corrected.')
             elif machine is None:
-                message(self.logger, pre_msg+'Unknown machine')
+                self.logger.warning(pre_msg+'Unknown machine')
 
         return self.im
 
@@ -749,6 +753,9 @@ class HiSeqImages():
         new_min_dict = self.config.get('background')
         max_px = self.config.get('max_pixel_value')
 
+        pre_msg = 'CorrectBackgroundRescale'
+        self.logger.info(f'{pre_msg} :: max px :: {max_px}')
+
         ncols = len(self.im.col)
         max_px_dot = [max_px] * ncols
 
@@ -757,6 +764,7 @@ class HiSeqImages():
         for ch in self.im.channel.values:
             new_min = new_min_dict[ch]
             new_min_ = [new_min] * ncols
+            self.logger.info(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
             group_min_ = []
             for c in range(int(ncols/256)):
@@ -783,7 +791,7 @@ class HiSeqImages():
         elif isinstance(self.config, dict):
             im = self.register_channels_affine()
         else:
-            print('Invalid config')
+            self.logger.warning('Invalid config')
             im = None
 
         return im
@@ -825,7 +833,7 @@ class HiSeqImages():
             if image is None:
                 self.im = img
         else:
-            message(self.logger, 'Unknown machine')
+            self.logger.warning('registerChannelsShift :: Unknown machine')
 
         return img
 
@@ -851,7 +859,8 @@ class HiSeqImages():
         # Get registration data
         reg_config = self.config.get('registration', None)
 
-        print(f'{self.machine} registration data')
+        pre_msg = 'getRegistrationData ::'
+        self.logger(f'{pre_msg} {self.machine} registration data')
 
         reg_dict = {}
         crop_bb = [top, bottom, left, right]
@@ -863,7 +872,7 @@ class HiSeqImages():
                 try:
                     shift = [float(s) for s in shift]
                 except:
-                    print(f'Registration shift {shift} for channel {ch} is invalid')
+                    self.logger.warning(f'{pre_msg} Registration shift {shift} for channel {ch} is invalid')
 
                 A = np.identity(3)
                 A[0,2] = -shift[0]
@@ -871,9 +880,9 @@ class HiSeqImages():
                 reg_dict[int(ch)]=A
                 crop_bb = self.update_crop_bb(crop_bb, shift)
 
-                print(f'Channel {ch} :: {shift}')
+                self.logger.info(f'{pre_msg} Channel {ch} :: {shift}')
 
-            print('Crop bounding box ::', crop_bb, '(top, bottom, left, right)')
+            self.logger.info(f'{pre_msg} :: Crop bounding box :: {crop_bb} (top, bottom, left, right)')
         else:
             raise ValueError(f'Registration data for {machine} not found')
 
@@ -975,16 +984,8 @@ class HiSeqImages():
 
     def register_channels_affine(self):
 
-        print('='*80)
-        print('Registering Channels...')
-        print(self.im)
-
         reg_dict, crop_bb = self.get_registration_data()
         self.im = self.apply_full(self.register_and_crop, args = (reg_dict, crop_bb))
-
-        print('... Channels registered')
-        print(self.im)
-        print('='*80)
 
         return self.im
 
@@ -1050,14 +1051,6 @@ class HiSeqImages():
                 self.im = im
         else:
             message(self.logger, 'Overlap already removed')
-
-
-
-    def quit(self):
-        if self.stop:
-            self.app.quit()
-            self.viewer.close()
-            self.viewer = None
 
 
 

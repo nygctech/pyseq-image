@@ -1,6 +1,35 @@
 import configparser
 from pathlib import Path
 import yaml
+import logging
+
+def get_logger(name = None, filehandler = None, consolehandler = None):
+
+    if name is  None:
+        name = __name__
+
+    if filehandler is None and consolehandler is None:
+        raise ValueError('Specify filehandler or consolehandler')
+
+    logger = logging.getLogger(name)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    if filehandler is not None:
+        # create file handler which logs even debug messages
+        fh = logging.FileHandler(filehandler)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    if consolehandler is not None:
+        # create console handler with a higher log level
+        ch = logging.StreamHandler(consolehandler)
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+
+    return logger
+
 
 
 
