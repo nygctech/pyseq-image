@@ -55,34 +55,34 @@ def get_config(config_path):
 
 
 
-def get_machine():
+# def get_machine():
+#
+#     machine_info_paths = [Path.home()/'.config'/'pyseq2500'/'machine_info.yaml',
+#                           Path.home()/'.config'/'pyseq2500'/'machine_info.cfg',
+#                           Path.home()/'.pyseq2500'/'machine_info.yaml',
+#                           Path.home()/'.pyseq2500'/'machine_info.cfg'
+#                           ]
+#     machine = None
+#     for p in machine_info_paths:
+#         machine_info = get_config(p)
+#         if machine_info is not None:
+#             machine = machine_info.defaults['name']
+#             break
+#
+#     return machine
 
-    machine_info_paths = [Path.home()/'.config'/'pyseq2500'/'machine_info.yaml',
-                          Path.home()/'.config'/'pyseq2500'/'machine_info.cfg',
-                          Path.home()/'.pyseq2500'/'machine_info.yaml',
-                          Path.home()/'.pyseq2500'/'machine_info.cfg'
-                          ]
-    machine = None
-    for p in machine_info_paths:
-        machine_info = get_config(p)
-        if machine_info is not None:
-            machine = machine_info.defaults['name']
-            break
 
-    return machine
-
-
-def parse_sections(config):
-    '''Return names of sections from experiment config file.'''
-
-    if isinstance(config, str):
-        config = get_config(config)
-
-    return config.options('sections')
-
-def get_exp_name(config):
-
-    if isinstance(config, str):
-        config = get_config(config)
-
-    return config.get('experiment', 'experiment name')
+# def parse_sections(config):
+#     '''Return names of sections from experiment config file.'''
+#
+#     if isinstance(config, str):
+#         config = get_config(config)
+#
+#     return config.options('sections')
+#
+# def get_exp_name(config):
+#
+#     if isinstance(config, str):
+#         config = get_config(config)
+#
+#     return config.get('experiment', 'experiment name')
