@@ -405,10 +405,10 @@ def compute_background(image_path=None, common_name = ''):
 
 
 
-def get_HiSeqImages(image_path=None, common_name='', logger = None):
+def get_HiSeqImages(image_path=None, common_name='', **kwargs):
 
 
-    ims = HiSeqImages(image_path, common_name, logger)
+    ims = HiSeqImages(image_path, common_name, **kwargs)
     ims_ = [im for im in ims.im if im is not None]
     n_images = len(ims_)
     if n_images > 1:
@@ -625,7 +625,7 @@ class HiSeqImages():
         self.stop = False
         self.app = None
         self.viewer = None
-        self.logger = get_logger('HiSeqImage', **kwargs)
+        self.logger = get_logger(**kwargs)
         self.filenames = []
         self.resolution = 0.375                                                 # um/px
         self.x_spum = 0.4096                                                    #steps per um
@@ -686,7 +686,8 @@ class HiSeqImages():
                     section_names += self.open_zarr()
 
             if len(section_names) > 0:
-                message(self.logger, 'Opened', *section_names)
+                section_names = ' '.join(section_names)
+                self.logger.info(f'Opened {section_names}')
 
         else:
             self.machine = im.machine

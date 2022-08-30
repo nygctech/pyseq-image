@@ -3,15 +3,13 @@ from pathlib import Path
 import yaml
 import logging
 
-def get_logger(name = None, filehandler = None, consolehandler = None):
+def get_logger(logname = None, filehandler = None):
 
-    if name is  None:
-        name = __name__
+    if logname is  None:
+        logname = __name__
 
-    if filehandler is None and consolehandler is None:
-        raise ValueError('Specify filehandler or consolehandler')
-
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(logname)
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     if filehandler is not None:
@@ -21,9 +19,10 @@ def get_logger(name = None, filehandler = None, consolehandler = None):
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    if consolehandler is not None:
+    # . in logname means it's a child logger and don't need to set up console handler
+    if '.' not in logname:
         # create console handler with a higher log level
-        ch = logging.StreamHandler(consolehandler)
+        ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
         logger.addHandler(ch)
