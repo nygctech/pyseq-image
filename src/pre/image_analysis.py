@@ -983,7 +983,7 @@ class HiSeqImages():
 
 
 
-    ®def register_channels_affine(self):
+    def register_channels_affine(self):
 
         reg_dict, crop_bb = self.get_registration_data()
         self.im = self.apply_full(self.register_and_crop, args = (reg_dict, crop_bb))
