@@ -758,13 +758,13 @@ class HiSeqImages():
         self.logger.info(f'{pre_msg} :: max px :: {max_px}')
 
         ncols = len(self.im.col)
-        max_px_dot = [max_px] * ncols
+        max_px_ = da.from_array([max_px] * ncols
 
 
         ch_list = []
         for ch in self.im.channel.values:
             new_min = new_min_dict[ch]
-            new_min_ = [new_min] * ncols
+            new_min_ = da.from_array([new_min] * ncols)
             self.logger.info(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
             group_min_ = []
@@ -773,8 +773,8 @@ class HiSeqImages():
                 group_min = group.min()
                 group_min_ += [int(group_min.values)] * 256
 
-            old_contrast = np.subtract(max_px_dot, group_min_)
-            new_contrast = np.array([max_px - new_min] * ncols)
+            old_contrast = max_px_ - da.from_array(group_min_)
+            new_contrast = da.from_array([max_px - new_min] * ncols)
             plane = self.im.sel(channel=ch)
             corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
             ch_list.append(corrected)
