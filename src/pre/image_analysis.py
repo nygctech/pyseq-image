@@ -770,7 +770,7 @@ class HiSeqImages():
             group_min_ = []
             for c in range(int(ncols/256)):
                 group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
-                group_min_ += da.from_array([group.min()] * 256)
+                group_min_ = da.from_array([group.min()] * 256)
 
             old_contrast = max_px_ - group_min_
             new_contrast = da.from_array([max_px - new_min] * ncols)
