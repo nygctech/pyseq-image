@@ -758,7 +758,7 @@ class HiSeqImages():
         self.logger.info(f'{pre_msg} :: max px :: {max_px}')
 
         ncols = len(self.im.col)
-        max_px_ = da.from_array([max_px] * ncols
+        max_px_ = da.from_array([max_px] * ncols)
 
 
         ch_list = []
