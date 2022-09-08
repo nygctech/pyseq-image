@@ -767,10 +767,10 @@ class HiSeqImages():
             new_min_ = da.from_array([new_min] * ncols)
             self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
-            group_min_ = []
+            group_min_ = da.from_array([])
             for c in range(int(ncols/256)):
                 group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
-                group_min_ = da.from_array([group.min()] * 256)
+                group_min_ = da.concatenate([group_min_, da.from_array([group.min()] * 256)])
 
             old_contrast = max_px_ - group_min_
             new_contrast = da.from_array([max_px - new_min] * ncols)
