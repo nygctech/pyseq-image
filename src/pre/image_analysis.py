@@ -755,7 +755,7 @@ class HiSeqImages():
         max_px = self.config.get('max_pixel_value')
 
         pre_msg = 'CorrectBackgroundRescale'
-        self.logger.info(f'{pre_msg} :: max px :: {max_px}')
+        self.logger.debug(f'{pre_msg} :: max px :: {max_px}')
 
         ncols = len(self.im.col)
         max_px_ = da.from_array([max_px] * ncols)
@@ -765,15 +765,14 @@ class HiSeqImages():
         for ch in self.im.channel.values:
             new_min = new_min_dict[ch]
             new_min_ = da.from_array([new_min] * ncols)
-            self.logger.info(f'{pre_msg} :: channel {ch} min px :: {new_min}')
+            self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
             group_min_ = []
             for c in range(int(ncols/256)):
                 group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
-                group_min = group.min()
-                group_min_ += [int(group_min.values)] * 256
+                group_min_ += da.from_array([group.min()] * 256)
 
-            old_contrast = max_px_ - da.from_array(group_min_)
+            old_contrast = max_px_ - group_min_
             new_contrast = da.from_array([max_px - new_min] * ncols)
             plane = self.im.sel(channel=ch)
             corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
