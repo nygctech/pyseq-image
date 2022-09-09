@@ -684,10 +684,14 @@ class HiSeqImages():
                 if len(filenames) > 0:
                     self.filenames = filenames
                     section_names += self.open_zarr()
-
+                    
+            if len(section_names) == 1:
+                self.name = section_names[0]
+                
             if len(section_names) > 0:
                 section_names = ' '.join(section_names)
                 self.logger.info(f'Opened {section_names}')
+
 
         else:
             self.machine = im.machine
@@ -793,6 +797,7 @@ class HiSeqImages():
             ch_list.append(corrected)
 
         self.im = xr.concat(ch_list, dim='channel')
+        self.im.name = self.name
         
         self.logger.debug(f'final name::{self.im.name}')
 
