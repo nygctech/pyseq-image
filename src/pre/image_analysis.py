@@ -751,6 +751,7 @@ class HiSeqImages():
         '''Rescale pixel values for each group to the average background.'''
 
 
+        self.logger.debug(f'initial name::{self.im.name}')
         new_min_dict = self.config.get('background')
         max_px = self.config.get('max_pixel_value')
 
@@ -791,7 +792,9 @@ class HiSeqImages():
             corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
             ch_list.append(corrected)
 
-        self.im = xr.concat(ch_list, dim='channel', name = self.im.name)
+        self.im = xr.concat(ch_list, dim='channel')
+        
+        self.logger.debug(f'final name::{self.im.name}')
 
         return self.im
 
