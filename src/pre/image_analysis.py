@@ -758,8 +758,10 @@ class HiSeqImages():
         self.logger.debug(f'{pre_msg} :: max px :: {max_px}')
 
         ncols = len(self.im.col)
+        ntiles = int(ncols/2048)
+        gs = 256 if max_px == 4095 else 512
         max_px_ = da.from_array([max_px] * ncols)
-
+        ngroups = int(2048/gs)
 
         ch_list = []
         for ch in self.im.channel.values:
@@ -767,10 +769,21 @@ class HiSeqImages():
             new_min_ = da.from_array([new_min] * ncols)
             self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
-            group_min_ = da.from_array([])
-            for c in range(int(ncols/256)):
-                group = self.im.sel(channel=ch, col=slice(c*256,(c+1)*256))
-                group_min_ = da.concatenate([group_min_, da.from_array([group.min()] * 256)])
+            # Find min value in sensor group across image
+            bg = [max_px]*ngroups
+            for t in range(ntiles):
+                tile = self.im.sel(channel=ch, col=slice(t*0,(t+1)*2048))
+                for g in range(ngroups):
+                    bg[g] = min(tile.sel(col=slice(g*0,(g+1)*gs)).min(), bg[g])
+            # Compute min values
+            for g in range(ngroups):
+                bg[g] = bg[g].values
+            # Create array of min group values
+            group_min_ = []
+            for t in range(ntiles):
+                for g in range(ngroups):
+                    group_min_ += [bg[g]]*gs
+            group_min_ = da.array(group_min_)
 
             old_contrast = max_px_ - group_min_
             new_contrast = da.from_array([max_px - new_min] * ncols)
@@ -778,7 +791,7 @@ class HiSeqImages():
             corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
             ch_list.append(corrected)
 
-        self.im = xr.concat(ch_list, dim='channel')
+        self.im = xr.concat(ch_list, dim='channel', name = self.im.name)
 
         return self.im
 
