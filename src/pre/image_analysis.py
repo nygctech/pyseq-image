@@ -684,10 +684,10 @@ class HiSeqImages():
                 if len(filenames) > 0:
                     self.filenames = filenames
                     section_names += self.open_zarr()
-                    
+
             if len(section_names) == 1:
                 self.name = section_names[0]
-                
+
             if len(section_names) > 0:
                 section_names = ' '.join(section_names)
                 self.logger.info(f'Opened {section_names}')
@@ -698,6 +698,7 @@ class HiSeqImages():
             if im.machine is not None:
                 self.config, config_path = get_machine_config(im.machine)
             self.im = im
+            self.name = im.name
 
     def correct_background(self):
         # Maintain compatibility with older config files and
@@ -775,14 +776,17 @@ class HiSeqImages():
             self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
             # Find min value in sensor group across image
-            bg = [max_px]*ngroups
+            group_stacks = {}
+            for g in range(ngroups):
+                group_stacks[g] = []
             for t in range(ntiles):
                 tile = self.im.sel(channel=ch, col=slice(t*0,(t+1)*2048))
                 for g in range(ngroups):
-                    bg[g] = min(tile.sel(col=slice(g*0,(g+1)*gs)).min(), bg[g])
+                    group_stacks[g].append(tile.sel(col=slice(g*0,(g+1)*gs))))
             # Compute min values
+            bg = [0]*ngroups
             for g in range(ngroups):
-                bg[g] = bg[g].values
+                bg[g] = xr.concat(group_stacks[g]).min()
             # Create array of min group values
             group_min_ = []
             for t in range(ntiles):
@@ -798,7 +802,7 @@ class HiSeqImages():
 
         self.im = xr.concat(ch_list, dim='channel')
         self.im.name = self.name
-        
+
         self.logger.debug(f'final name::{self.im.name}')
 
         return self.im
