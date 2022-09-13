@@ -775,20 +775,8 @@ class HiSeqImages():
             new_min = new_min_dict[ch]
             new_min_ = da.from_array([new_min] * ncols)
             self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
+            self.logger.debug(f'{pre_msg} :: channel {ch} dark px :: {dark_dict[ch][g]}')
 
-            # Find min value in sensor group across image
-#             group_stacks = {}
-#             for g in range(ngroups):
-#                 group_stacks[g] = []
-#             for t in range(ntiles):
-#                 tile = self.im.sel(channel=ch, col=slice(t*0,(t+1)*2048))
-#                 for g in range(ngroups):
-#                     group_stacks[g].append(tile.sel(col=slice(g*0,(g+1)*gs)))
-#             # Compute min values
-#             bg = [0]*ngroups
-#             for g in range(ngroups):
-#                 bg[g] = xr.concat(group_stacks[g], dim = 'col').min()
-            # Create array of min group values
             group_min_ = np.zeros(ncols)
             for t in range(ntiles):
                 for g in range(ngroups):
