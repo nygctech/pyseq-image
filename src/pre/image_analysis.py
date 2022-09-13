@@ -758,6 +758,7 @@ class HiSeqImages():
 
         self.logger.debug(f'initial name::{self.im.name}')
         new_min_dict = self.config.get('background')
+        dark_dict = self.config.get('dark group')
         max_px = self.config.get('max_pixel_value')
 
         pre_msg = 'CorrectBackgroundRescale'
@@ -776,28 +777,28 @@ class HiSeqImages():
             self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
             # Find min value in sensor group across image
-            group_stacks = {}
-            for g in range(ngroups):
-                group_stacks[g] = []
-            for t in range(ntiles):
-                tile = self.im.sel(channel=ch, col=slice(t*0,(t+1)*2048))
-                for g in range(ngroups):
-                    group_stacks[g].append(tile.sel(col=slice(g*0,(g+1)*gs))))
-            # Compute min values
-            bg = [0]*ngroups
-            for g in range(ngroups):
-                bg[g] = xr.concat(group_stacks[g]).min()
+#             group_stacks = {}
+#             for g in range(ngroups):
+#                 group_stacks[g] = []
+#             for t in range(ntiles):
+#                 tile = self.im.sel(channel=ch, col=slice(t*0,(t+1)*2048))
+#                 for g in range(ngroups):
+#                     group_stacks[g].append(tile.sel(col=slice(g*0,(g+1)*gs)))
+#             # Compute min values
+#             bg = [0]*ngroups
+#             for g in range(ngroups):
+#                 bg[g] = xr.concat(group_stacks[g], dim = 'col').min()
             # Create array of min group values
-            group_min_ = []
+            group_min_ = np.zeros(ncols)
             for t in range(ntiles):
                 for g in range(ngroups):
-                    group_min_ += [bg[g]]*gs
+                    group_min_[t*2048 + g*gs : t*2048 + (g+1)*gs] = dark_dict[ch][g]
             group_min_ = da.array(group_min_)
 
             old_contrast = max_px_ - group_min_
             new_contrast = da.from_array([max_px - new_min] * ncols)
             plane = self.im.sel(channel=ch)
-            corrected = (((plane-group_min_)/old_contrast * new_contrast) +  new_min_).astype('int16')
+            corrected = (((plane-group_min_).clip(min=0)/old_contrast * new_contrast) +  new_min_).astype('uint16')
             ch_list.append(corrected)
 
         self.im = xr.concat(ch_list, dim='channel')
