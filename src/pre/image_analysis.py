@@ -775,7 +775,7 @@ class HiSeqImages():
             new_min = new_min_dict[ch]
             new_min_ = da.from_array([new_min] * ncols)
             self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
-            self.logger.debug(f'{pre_msg} :: channel {ch} dark px :: {dark_dict[ch]}')
+            #self.logger.debug(f'{pre_msg} :: channel {ch} dark px :: {dark_dict[ch]}')
 
             group_min_ = np.zeros(ncols)
             for t in range(ntiles):
