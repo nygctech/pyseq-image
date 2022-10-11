@@ -132,3 +132,6 @@ dmypy.json
 # snakemake stuff
 workflows/.snakemake/*
 workflows/*.out
+
+# MAC
+*.DS_Store
