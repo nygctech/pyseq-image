@@ -19,6 +19,8 @@ import time
 import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
+from skimage.filters import median as med_filter
+from skimage.morphology import square
 import yaml
 from pre.utils import get_config, get_logger
 import logging
@@ -117,7 +119,7 @@ def sum_images(images, logger = None, **kwargs):
 
     return im
 
-def interpolate(image, new_min=0, new_max=1, old_min=None, old_max=None, dtype = None:
+def interpolate(image, new_min=0, new_max=1, old_min=None, old_max=None, dtype = None):
     '''Interpolate image from old min/max to new min/max.'''
 
     if dtype is None:
@@ -1027,6 +1029,7 @@ class HiSeqImages():
     def focus_projection(self, overlap = 0.5, cycle=1, channel=610, smooth = True):
         '''Project best focus Z slice across XY window and reduce 3D to 2D.'''
 
+        print(self.im)
 
         nrows = self.im.row.size
         ncols = self.im.col.size
@@ -1038,9 +1041,9 @@ class HiSeqImages():
 
         window = image.chunksizes['col'][0]
 
-        filter_size = ceil(1/overlap_)
+        filter_size = ceil(1/overlap) + 1
         overlap = int(overlap*window)
-        _rows = nrows//overlap; _cols = ncols//overlap
+        _rows = max(nrows//overlap,1); _cols = max(ncols//overlap,1)
 
 
         # Find size of sliding window image as a jpeg
@@ -1050,46 +1053,51 @@ class HiSeqImages():
             jpeg_size = np.zeros((_rows,1), 'uint8')
             tile = tile.values
 
-            for _r in range(_rows):
-                rows = slice(_r*overlap, min(nrows, (_r*overlap)+window))
-                tile = image.sel(row = rows)
+            for r in range(_rows):
+                rows = slice(r*overlap, min(nrows, (r*overlap)+window))
+                fov = tile[rows,:]
                 if im_max > 255 or im_min < 0:
-                    tile = interpolate(tile, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
+                    fov = interpolate(fov, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
                 with BytesIO() as f:
-                    imageio.imwrite(f, im, format='jpeg')
-                    jpeg_size[i] = f.__sizeof__()
+                    imageio.imwrite(f, fov, format='jpeg')
+                    jpeg_size[r] = f.__sizeof__()
+
+            return jpeg_size
 
         # Measure focus of window
         o_stack = []
         for o_ind, o in enumerate(image.obj_step):
             col_stack = []
-            for _c in range(_cols):
-                cols = slice( _c*overlap, min(ncols, (_c*overlap)+window))
+            for c in range(_cols):
+                cols = slice( c*overlap, min(ncols, (c*overlap)+window))
+                print(c, cols)
                 tile = image.sel(col = cols, obj_step = o)
                 tile_focus_vals = da.from_delayed(_get_jpeg(tile), shape = (_rows,1), dtype = 'uint8' )
                 col_stack.append(tile_focus_vals)
             o_stack.append(da.hstack(col_stack))
         focus_vals = da.stack(o_stack, axis=2)
 
+
         # Find z slice that is most in focus for each window
         focus_map = focus_vals.argmax(axis = 2)
-        focus_map.compute()
+        focus_map = focus_map.compute()
 
         # Median filter focus map
         if smooth:
             focus_map = med_filter(focus_map, square(filter_size)).astype('uint8')
 
+
         # Build 2D image from most in focus frames
-        obj_steps = image.obj_step
+        obj_steps = self.im.obj_step
         col_stack = []
-        for _c in range(_cols):
-            c_end = (_c+1)*overlap if _c < _cols-1 else ncols
-            cols = slice( _c*overlap, c_end)
+        for c in range(_cols):
+            c_end = (c+1)*overlap if c < _cols-1 else ncols
+            cols = slice(c*overlap, c_end)
             row_stack = []
-            for _r in range(_rows):
-                r_end = (_r+1)*overlap if _r < _rows-1 else nrows
-                rows = slice(_r*overlap, r_end)
-                o_ind = focus_map[_r, _c]
+            for r in range(_rows):
+                r_end = (r+1)*overlap if r < _rows-1 else nrows
+                rows = slice(r*overlap, r_end)
+                o_ind = focus_map[r, c]
                 row_stack.append(self.im.sel(row=rows, col = cols, obj_step=obj_steps[o_ind]))
             col_stack.append(xr.concat(row_stack, dim = 'row'))
         focus_image = xr.concat(col_stack, dim = 'col')
