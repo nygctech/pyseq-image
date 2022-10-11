@@ -2,6 +2,7 @@ from pre import image_analysis as ia
 import numpy as np
 import pytest
 from pathlib import Path
+from math import ceil
 
 
 @pytest.fixture
@@ -49,3 +50,19 @@ def test_get_machine_config(demo_config):
         assert len(config.get('background')) == 4
     elif config_path[-3:] == 'cfg':
         assert len(config.options('virtualbackground')) == 4
+
+def test_focus_projection(demo_image):
+
+
+    demo_image.correct_background()
+
+    rows = demo_image.im.row.size
+    cols = demo_image.im.col.size
+    overlap = 0.5
+
+    focus_map = demo_image.focus_projection()
+
+    assert focus_map.shape == (ceil(rows/overlap), ceil(cols/overlap))
+    assert demo_image.im.shape == (rows, cols)
+    assert np.all(focus_map == 1)
+    assert 'obj_step' not in demo_image.im.dims

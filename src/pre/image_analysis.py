@@ -23,6 +23,8 @@ import yaml
 from pre.utils import get_config, get_logger
 import logging
 
+from io import BytesIO
+from dask import delayed
 from dask_image.ndinterp import affine_transform
 
 try:
@@ -114,6 +116,25 @@ def sum_images(images, logger = None, **kwargs):
         im = None
 
     return im
+
+def interpolate(image, new_min=0, new_max=1, old_min=None, old_max=None, dtype = None:
+    '''Interpolate image from old min/max to new min/max.'''
+
+    if dtype is None:
+        dtype = image.dtype
+    else:
+        assert dtype in ['uint8']
+
+    if old_min is None:
+        old_min = image.min()
+
+    if old_max is None:
+        old_max = image.max()
+
+
+    image = (image-old_min) * (new_max - new_min) / (old_max-old_min) + new_min
+
+    return image.astype(dtype)
 
 
 def kurt(im, mean=None, std=None):
@@ -1003,6 +1024,79 @@ class HiSeqImages():
 
         return self.im
 
+    def focus_projection(self, overlap = 0.5, cycle=1, channel=610, smooth = True):
+        '''Project best focus Z slice across XY window and reduce 3D to 2D.'''
+
+
+        nrows = self.im.row.size
+        ncols = self.im.col.size
+        nobj_steps = self.im.obj_step.size
+
+        image = self.im.sel(cycle=1, channel=610)
+        im_min = image.min().values
+        im_max = image.max().values
+
+        window = image.chunksizes['col'][0]
+
+        filter_size = ceil(1/overlap_)
+        overlap = int(overlap*window)
+        _rows = nrows//overlap; _cols = ncols//overlap
+
+
+        # Find size of sliding window image as a jpeg
+        @delayed
+        def _get_jpeg(tile):
+
+            jpeg_size = np.zeros((_rows,1), 'uint8')
+            tile = tile.values
+
+            for _r in range(_rows):
+                rows = slice(_r*overlap, min(nrows, (_r*overlap)+window))
+                tile = image.sel(row = rows)
+                if im_max > 255 or im_min < 0:
+                    tile = interpolate(tile, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
+                with BytesIO() as f:
+                    imageio.imwrite(f, im, format='jpeg')
+                    jpeg_size[i] = f.__sizeof__()
+
+        # Measure focus of window
+        o_stack = []
+        for o_ind, o in enumerate(image.obj_step):
+            col_stack = []
+            for _c in range(_cols):
+                cols = slice( _c*overlap, min(ncols, (_c*overlap)+window))
+                tile = image.sel(col = cols, obj_step = o)
+                tile_focus_vals = da.from_delayed(_get_jpeg(tile), shape = (_rows,1), dtype = 'uint8' )
+                col_stack.append(tile_focus_vals)
+            o_stack.append(da.hstack(col_stack))
+        focus_vals = da.stack(o_stack, axis=2)
+
+        # Find z slice that is most in focus for each window
+        focus_map = focus_vals.argmax(axis = 2)
+        focus_map.compute()
+
+        # Median filter focus map
+        if smooth:
+            focus_map = med_filter(focus_map, square(filter_size)).astype('uint8')
+
+        # Build 2D image from most in focus frames
+        obj_steps = image.obj_step
+        col_stack = []
+        for _c in range(_cols):
+            c_end = (_c+1)*overlap if _c < _cols-1 else ncols
+            cols = slice( _c*overlap, c_end)
+            row_stack = []
+            for _r in range(_rows):
+                r_end = (_r+1)*overlap if _r < _rows-1 else nrows
+                rows = slice(_r*overlap, r_end)
+                o_ind = focus_map[_r, _c]
+                row_stack.append(self.im.sel(row=rows, col = cols, obj_step=obj_steps[o_ind]))
+            col_stack.append(xr.concat(row_stack, dim = 'row'))
+        focus_image = xr.concat(col_stack, dim = 'col')
+
+        self.im = focus_image
+
+        return focus_map
 
     def normalize(self, dims=['channel']):
         '''Normalize pixel values between 0 and 1.
