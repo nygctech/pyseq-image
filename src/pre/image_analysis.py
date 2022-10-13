@@ -1029,17 +1029,17 @@ class HiSeqImages():
     def focus_projection(self, overlap = 0.5, cycle=1, channel=610, smooth = True):
         '''Project best focus Z slice across XY window and reduce 3D to 2D.'''
 
-        print(self.im)
-
         nrows = self.im.row.size
         ncols = self.im.col.size
         nobj_steps = self.im.obj_step.size
-
+        
+        self.logger.info(f'Projecting cycle {cycle}, channel {channel}')
         image = self.im.sel(cycle=1, channel=610)
         im_min = image.min().values
         im_max = image.max().values
 
         window = image.chunksizes['col'][0]
+        self.logger.info(f'Window size = {window} pixels')
 
         filter_size = ceil(1/overlap) + 1
         overlap = int(overlap*window)
@@ -1070,7 +1070,6 @@ class HiSeqImages():
             col_stack = []
             for c in range(_cols):
                 cols = slice( c*overlap, min(ncols, (c*overlap)+window))
-                print(c, cols)
                 tile = image.sel(col = cols, obj_step = o)
                 tile_focus_vals = da.from_delayed(_get_jpeg(tile), shape = (_rows,1), dtype = 'uint8' )
                 col_stack.append(tile_focus_vals)
@@ -1080,7 +1079,11 @@ class HiSeqImages():
 
         # Find z slice that is most in focus for each window
         focus_map = focus_vals.argmax(axis = 2)
+        self.logger.info(f'Begin computing focus map from {focus_map.size} windows')
         focus_map = focus_map.compute()
+        self.logger.info('Finished computing focus map')
+        self.logger.debug('Focus Map')
+        self.logger.debug(focus_map)
 
         # Median filter focus map
         if smooth:
