@@ -1038,7 +1038,9 @@ class HiSeqImages():
         im_min = image.min().values
         im_max = image.max().values
 
-        window = image.chunksizes['col'][0]
+        col_chunk = image.chunksizes['col'][0]
+        row_chunk = image.chunksizes['row'][0]
+        window = col_chunk
         self.logger.info(f'Window size = {window} pixels')
 
         filter_size = ceil(1/overlap) + 1
@@ -1104,7 +1106,9 @@ class HiSeqImages():
                 row_stack.append(self.im.sel(row=rows, col = cols, obj_step=obj_steps[o_ind]))
             col_stack.append(xr.concat(row_stack, dim = 'row'))
         focus_image = xr.concat(col_stack, dim = 'col')
-
+        
+        # Rechunk
+        focus_image = focus_image.chunk({'row':row_chunk, 'col':col_chunk})
         self.im = focus_image
 
         return focus_map
