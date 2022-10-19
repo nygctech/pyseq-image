@@ -26,7 +26,7 @@ from pre.utils import get_config, get_logger
 import logging
 
 from io import BytesIO
-from dask import delayed
+from dask import delayed, compute
 from dask_image.ndinterp import affine_transform
 
 try:
@@ -1029,10 +1029,15 @@ class HiSeqImages():
     def focus_projection(self, overlap = 0.5, cycle=1, channel=610, smooth = True):
         '''Project best focus Z slice across XY window and reduce 3D to 2D.'''
 
+        assert 0 < overlap <= 1, 'Overlap must be between 1 and 0'
+        assert cycle in self.cycle.values, f'Cycle {cycle} not in image data'
+        assert channel in self.channel.values, f'Channel {channel} not in image data'
+
         nrows = self.im.row.size
         ncols = self.im.col.size
         nobj_steps = self.im.obj_step.size
-        
+        obj_steps = self.im.obj_step
+
         self.logger.info(f'Projecting cycle {cycle}, channel {channel}')
         image = self.im.sel(cycle=1, channel=610)
         im_min = image.min().values
@@ -1043,7 +1048,7 @@ class HiSeqImages():
         window = col_chunk
         self.logger.info(f'Window size = {window} pixels')
 
-        filter_size = ceil(1/overlap) + 1
+        filter_size = max(1, ceil(1/overlap)-1)
         overlap = int(overlap*window)
         _rows = max(nrows//overlap,1); _cols = max(ncols//overlap,1)
 
@@ -1087,13 +1092,42 @@ class HiSeqImages():
         self.logger.debug('Focus Map')
         self.logger.debug(focus_map)
 
-        # Median filter focus map
+        # Masked median filter focus map
         if smooth:
-            focus_map = med_filter(focus_map, square(filter_size)).astype('uint8')
+            # Old method: median filter that considered windows without tissue
+            # Led to patchy final image
+            # focus_map = med_filter(focus_map, square(filter_size)).astype('uint8')
 
+            # Find windows with tissue from zmid
+            # Windows with low variance don't have tissue
+            zmid = image.sel(obj_step = obj_steps[n_objsteps//2])
+            var_ = []
+            for _c in range(_cols):
+                cols = slice( _c*overlap, min(ncols, (_c*overlap)+window))
+                for _r in range(_rows):
+                    rows = slice(_r*overlap, min(nrows, (_r*overlap)+window))
+                    var_.append(zmid.sel(row=rows, col=cols).var())
+            var_map = dask.compute(*delayed_var)
+            var_map = np.reshape(var_map, (_rows, _cols), order='F')
+            var_thresh = var_map.std()
+
+            # Mask focus map where there is no tissue, ie mask off low variance windows
+            ma_focus_map = np.ma.array(focus_map, mask = var_thresh < var_thresh)
+            avg_step = int(ma_focus_map.mean().round())
+
+            # Median filter masked focus map
+            filt_focus_map = np.ones_like(focus_map, dtype='uint8') * avg_step
+            for c in range(map_cols):
+                c_start = max(0, c-filter_size); c_stop = min(map_cols, c+filter_size)
+                for r in range(map_rows):
+                    r_start = max(0, r-filter_size); r_stop = min(map_rows, r+filter_size)
+                    f_obj_step = np.ma.median(ma_focus_map[r_start:r_stop,c_start:c_stop])
+                    if ~np.ma.is_masked(f_obj_step):
+                        filt_focus_map[r,c] = f_obj_step
+        else:
+            filt_focus_map = focus_map
 
         # Build 2D image from most in focus frames
-        obj_steps = self.im.obj_step
         col_stack = []
         for c in range(_cols):
             c_end = (c+1)*overlap if c < _cols-1 else ncols
@@ -1102,16 +1136,16 @@ class HiSeqImages():
             for r in range(_rows):
                 r_end = (r+1)*overlap if r < _rows-1 else nrows
                 rows = slice(r*overlap, r_end)
-                o_ind = focus_map[r, c]
+                o_ind = filt_focus_map[r, c]
                 row_stack.append(self.im.sel(row=rows, col = cols, obj_step=obj_steps[o_ind]))
             col_stack.append(xr.concat(row_stack, dim = 'row'))
         focus_image = xr.concat(col_stack, dim = 'col')
-        
+
         # Rechunk
         focus_image = focus_image.chunk({'row':row_chunk, 'col':col_chunk})
         self.im = focus_image
 
-        return focus_map
+        return filt_focus_map
 
     def normalize(self, dims=['channel']):
         '''Normalize pixel values between 0 and 1.
