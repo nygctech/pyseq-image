@@ -1053,22 +1053,46 @@ class HiSeqImages():
         overlap = int(overlap*window)
         _rows = max(nrows//overlap,1); _cols = max(ncols//overlap,1)
 
+        # Find windows with tissue from zmid
+        # Windows with low variance don't have tissue
+        self.logger.info(f'Begin finding windows with tissue')
+        zmid = image.sel(obj_step = obj_steps[nobj_steps//2])
+        var_ = []
+        for _c in range(_cols):
+            cols = slice( _c*overlap, min(ncols, (_c*overlap)+window))
+            for _r in range(_rows):
+                rows = slice(_r*overlap, min(nrows, (_r*overlap)+window))
+                var_.append(zmid.sel(row=rows, col=cols).var())
+        var_map = dask.compute(*var_)
+        var_map = np.reshape(var_map, (_rows, _cols), order='F')
+        var_thresh = var_map.std()
+        self.logger.debug(f'Variance Map')
+        self.logger.debug(var_map)
+        self.logger.debug(f'Variance threshold {var_thresh}')
+        self.logger.info(f'Finished finding windows with tissue')
+        var_map = var_map > var_thresh
+        #TODO save image of windows with tissue
+
 
         # Find size of sliding window image as a jpeg
         @delayed
-        def _get_jpeg(tile):
+        def _get_jpeg(tile, map):
 
             jpeg_size = np.zeros((_rows,1), 'uint8')
             tile = tile.values
 
             for r in range(_rows):
-                rows = slice(r*overlap, min(nrows, (r*overlap)+window))
-                fov = tile[rows,:]
-                if im_max > 255 or im_min < 0:
-                    fov = interpolate(fov, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
-                with BytesIO() as f:
-                    imageio.imwrite(f, fov, format='jpeg')
-                    jpeg_size[r] = f.__sizeof__()
+                if map[r]:
+                    rows = slice(r*overlap, min(nrows, (r*overlap)+window))
+                    fov = tile[rows,:]
+                    if im_max > 255 or im_min < 0:
+                        fov = interpolate(fov, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
+                    with BytesIO() as f:
+                        imageio.imwrite(f, fov, format='jpeg')
+                        jpeg_size[r] = f.__sizeof__()
+                else:
+                    # skip windows without tissue
+                    jpeg_size[r] = 0
 
             return jpeg_size
 
@@ -1079,7 +1103,7 @@ class HiSeqImages():
             for c in range(_cols):
                 cols = slice( c*overlap, min(ncols, (c*overlap)+window))
                 tile = image.sel(col = cols, obj_step = o)
-                tile_focus_vals = da.from_delayed(_get_jpeg(tile), shape = (_rows,1), dtype = 'uint8' )
+                tile_focus_vals = da.from_delayed(_get_jpeg(tile, var_map[:,c]), shape = (_rows,1), dtype = 'uint8')
                 col_stack.append(tile_focus_vals)
             o_stack.append(da.hstack(col_stack))
         focus_vals = da.stack(o_stack, axis=2)
@@ -1100,25 +1124,9 @@ class HiSeqImages():
             # Led to patchy final image
             # focus_map = med_filter(focus_map, square(filter_size)).astype('uint8')
 
-            # Find windows with tissue from zmid
-            # Windows with low variance don't have tissue
-            zmid = image.sel(obj_step = obj_steps[nobj_steps//2])
-            var_ = []
-            for _c in range(_cols):
-                cols = slice( _c*overlap, min(ncols, (_c*overlap)+window))
-                for _r in range(_rows):
-                    rows = slice(_r*overlap, min(nrows, (_r*overlap)+window))
-                    var_.append(zmid.sel(row=rows, col=cols).var())
-            var_map = dask.compute(*var_)
-            var_map = np.reshape(var_map, (_rows, _cols), order='F')
-            var_thresh = var_map.std()
-            self.logger.debug(f'Variance Map')
-            self.logger.debug(var_map)
-            self.logger.debug(f'Variance threshold {var_thresh}')
-            #TODO save image of windows with tissue
 
             # Mask focus map where there is no tissue, ie mask off low variance windows
-            ma_focus_map = np.ma.array(focus_map, mask = var_thresh < var_thresh)
+            ma_focus_map = np.ma.array(focus_map, mask = ~var_map)
             avg_step = int(ma_focus_map.mean().round())
 
             # Median filter masked focus map
