@@ -1019,10 +1019,11 @@ class HiSeqImages():
 
 
 
-    def register_channels_affine(self):
+    def register_channels_affine(self, row_crop = slice(64, None):
 
         reg_dict, crop_bb = self.get_registration_data()
-        self.im = self.apply_full(self.register_and_crop, args = (reg_dict, crop_bb))
+        _im = self.apply_full(self.register_and_crop, args = (reg_dict, crop_bb))
+        self.im = _im.sel(row = row_crop)                                       # top 64 rows have white noise
 
         return self.im
 
@@ -1152,7 +1153,7 @@ class HiSeqImages():
         focus_image = focus_image.chunk({'row':row_chunk, 'col':col_chunk})
         self.im = focus_image
         self.logger.debug(f'Finished projecting focus image')
-        
+
         return filt_focus_map
 
     def normalize(self, dims=['channel']):
