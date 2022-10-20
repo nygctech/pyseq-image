@@ -775,7 +775,7 @@ class HiSeqImages():
 
         return self.im
 
-    def correct_background_rescale(self):
+    def correct_background_rescale(self, row_crop=slice(64,None)):
         '''Rescale pixel values for each group to the average background.'''
 
 
@@ -812,7 +812,7 @@ class HiSeqImages():
             corrected = (((plane-group_min_).clip(min=0)/old_contrast * new_contrast) +  new_min_).astype('uint16')
             ch_list.append(corrected)
 
-        self.im = xr.concat(ch_list, dim='channel')
+        self.im = xr.concat(ch_list, dim='channel').sel(row = row_crop)
         self.im.name = self.name
 
         self.logger.debug(f'final name::{self.im.name}')
@@ -1019,18 +1019,17 @@ class HiSeqImages():
 
 
 
-    def register_channels_affine(self, row_crop = slice(64, None):
+    def register_channels_affine(self):
 
         reg_dict, crop_bb = self.get_registration_data()
-        _im = self.apply_full(self.register_and_crop, args = (reg_dict, crop_bb))
-        self.im = _im.sel(row = row_crop)                                       # top 64 rows have white noise
+        self.im = self.apply_full(self.register_and_crop, args = (reg_dict, crop_bb))
 
-        return self.im
+        return reg_dict
 
     def focus_projection(self, overlap = 0.5, cycle=1, channel=610, smooth = True):
         '''Project best focus Z slice across XY window and reduce 3D to 2D.'''
 
-        assert 0 < overlap <= 1, 'Overlap must be between 1 and 0'
+        assert 0 < overlap <= 1, 'Overlap must be between 0 and 1'
         assert cycle in self.im.cycle.values, f'Cycle {cycle} not in image data'
         assert channel in self.im.channel.values, f'Channel {channel} not in image data'
 
@@ -1040,7 +1039,7 @@ class HiSeqImages():
         obj_steps = self.im.obj_step
 
         self.logger.info(f'Projecting cycle {cycle}, channel {channel}')
-        image = self.im.sel(cycle=1, channel=610)
+        image = self.im.sel(cycle=cycle, channel=channel)
         im_min = image.min().values
         im_max = image.max().values
 
@@ -1058,31 +1057,33 @@ class HiSeqImages():
         self.logger.info(f'Begin finding windows with tissue')
         zmid = image.sel(obj_step = obj_steps[nobj_steps//2])
         var_ = []
-        for _c in range(_cols):
-            cols = slice( _c*overlap, min(ncols, (_c*overlap)+window))
-            for _r in range(_rows):
-                rows = slice(_r*overlap, min(nrows, (_r*overlap)+window))
+        for c in range(_cols):
+            cols = slice( c*overlap, min(ncols, (c*overlap)+window))
+            for r in range(_rows):
+                rows = slice(r*overlap, min(nrows, (r*overlap)+window))
                 var_.append(zmid.sel(row=rows, col=cols).var())
         var_map = dask.compute(*var_)
         var_map = np.reshape(var_map, (_rows, _cols), order='F')
-        var_thresh = var_map.std()
+        bg_px = self.config['background'][channel]
+        var_thresh = bg_px**2*0.25
         self.logger.debug(f'Variance Map')
         self.logger.debug(var_map)
         self.logger.debug(f'Variance threshold {var_thresh}')
         self.logger.info(f'Finished finding windows with tissue')
         var_map = var_map > var_thresh
+ 
         #TODO save image of windows with tissue
 
 
         # Find size of sliding window image as a jpeg
         @delayed
-        def _get_jpeg(tile, map):
+        def _get_jpeg(tile, var_map):
 
             jpeg_size = np.zeros((_rows,1), 'uint8')
             tile = tile.values
 
             for r in range(_rows):
-                if map[r]:
+                if var_map[r]:
                     rows = slice(r*overlap, min(nrows, (r*overlap)+window))
                     fov = tile[rows,:]
                     if im_max > 255 or im_min < 0:
@@ -1120,6 +1121,7 @@ class HiSeqImages():
         # Masked median filter focus map
         if smooth:
             self.logger.debug(f'Begin smoothing focus map')
+            self.logger.debug(f'Padding = {filter_size}')
             # Old method: median filter that considered windows without tissue
             # Led to patchy final image
             # focus_map = med_filter(focus_map, square(filter_size)).astype('uint8')
@@ -1128,6 +1130,8 @@ class HiSeqImages():
             # Mask focus map where there is no tissue, ie mask off low variance windows
             ma_focus_map = np.ma.array(focus_map, mask = ~var_map)
             avg_step = int(ma_focus_map.mean().round())
+            self.logger.debug(f'Average step: {avg_step}')
+            
 
             # Median filter masked focus map
             filt_focus_map = np.ones_like(focus_map, dtype='uint8') * avg_step
@@ -1136,7 +1140,7 @@ class HiSeqImages():
                 for r in range(_rows):
                     r_start = max(0, r-filter_size); r_stop = min(_rows, r+filter_size)
                     f_obj_step = np.ma.median(ma_focus_map[r_start:r_stop,c_start:c_stop])
-                    if ~np.ma.is_masked(f_obj_step):
+                    if not np.ma.is_masked(f_obj_step):
                         filt_focus_map[r,c] = f_obj_step
             self.logger.debug(f'Finished smoothing focus map')
         else:
