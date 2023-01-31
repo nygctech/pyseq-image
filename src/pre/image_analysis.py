@@ -1144,7 +1144,7 @@ class HiSeqImages():
 
         try:
             overlap=int(overlap)
-            n_tiles = int(len(self.im.col)/2048)
+            n_tiles = ceil(len(self.im.col)/2048)
         except:
             message(self.logger, 'overlap must be an integer')
 
