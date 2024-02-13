@@ -443,7 +443,7 @@ def get_HiSeqImages(image_path=None, common_name='', **kwargs):
         return None
 
 
-def get_machine_config(machine, extra_config_path = ''):
+def get_machine_config(machine, extra_config_path = '', **kwargs):
     '''Get machine settings config from default location.
 
       Default locations in order of preference:
@@ -667,7 +667,7 @@ class HiSeqImages():
             if path.exists(name_path):
                 with open(name_path,'r') as f:
                     machine = f.readline().strip()
-                self.config, config_path = get_machine_config(machine)
+                self.config, config_path = get_machine_config(machine, **kwargs)
             if self.config is not None:
                 self.machine = machine
             if self.machine is None:
@@ -1526,12 +1526,12 @@ class HiSeqImages():
                 i = comp_order['i']
                 fn_comp_sets[i] = [int(x) for x in fn_comp_sets[i]]
                 fn_comp_sets[i] = sorted(fn_comp_sets[i])
-                remap_comps = [fn_comp_sets[0], fn_comp_sets[3], fn_comp_sets[4], fn_comp_sets[6], [1],  fn_comp_sets[5]]
+                remap_comps = [fn_comp_sets[3], fn_comp_sets[0], fn_comp_sets[4], fn_comp_sets[6], [1],  fn_comp_sets[5]]
                 # List of sorted x steps for calculating overlap
                 #x_steps = sorted(list(fn_comp_sets[5]), reverse=True)
                 x_steps = fn_comp_sets[5]
             else:
-                remap_comps = [fn_comp_sets[0], fn_comp_sets[3], fn_comp_sets[5], [1],  fn_comp_sets[4]]
+                remap_comps = [fn_comp_sets[3], fn_comp_sets[0], fn_comp_sets[5], [1],  fn_comp_sets[4]]
                 # List of sorted x steps for calculating overlap
                 #x_steps = sorted(list(fn_comp_sets[4]), reverse=True)
                 x_steps = fn_comp_sets[4]
@@ -1548,17 +1548,17 @@ class HiSeqImages():
                 if 'i' in comp_order.keys():
                     co = comp_order['i']
                     image_i = fn_comp_sets[co].index(int(comp_[co]))
-                    a[channel, cycle, image_i, obj_step, 0, x_step] = x
+                    a[cycle, channel, image_i, obj_step, 0, x_step] = x
                 else:
-                    a[channel, cycle, obj_step, 0, x_step] = x
+                    a[cycle, channel, obj_step, 0, x_step] = x
 
             # Label array
             if 'i' in comp_order.keys():
-                dim_names = ['channel', 'cycle', 'image', 'obj_step', 'row', 'col']
-                coord_values = {'channel':fn_comp_sets[0], 'cycle':fn_comp_sets[3], 'image':fn_comp_sets[4], 'obj_step':fn_comp_sets[6]}
+                dim_names = ['cycle','channel', 'image', 'obj_step', 'row', 'col']
+                coord_values = {'cycle':fn_comp_sets[3], 'channel':fn_comp_sets[0],'image':fn_comp_sets[4], 'obj_step':fn_comp_sets[6]}
             else:
-                dim_names = ['channel', 'cycle', 'obj_step', 'row', 'col']
-                coord_values = {'channel':fn_comp_sets[0], 'cycle':fn_comp_sets[3], 'obj_step':fn_comp_sets[5]}
+                dim_names = ['cycle', 'channel', 'obj_step', 'row', 'col']
+                coord_values = {'cycle':fn_comp_sets[3], 'channel':fn_comp_sets[0], 'obj_step':fn_comp_sets[5]}
             try:
                 im = xr.DataArray(da.block(a.tolist()),
                                        dims = dim_names,

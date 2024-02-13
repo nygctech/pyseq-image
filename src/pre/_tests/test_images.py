@@ -6,14 +6,14 @@ from math import ceil
 
 
 @pytest.fixture(params = ['m1a', 'm3b'])
-def demo_image(request):
+def demo_image(request, demo_config):
 
     # TODO make test images from Origin and Varick and have
     # old config file for one and new yaml config for the other
     # also have demo configs in demo folder
     image_path = Path(ia.__file__).parents[2] / Path('src/demo/images')
     # Reads 2 sections; m1a and m3b, return 1 it doesn't matter which
-    im = ia.get_HiSeqImages(image_path, common_name = request.param)
+    im = ia.get_HiSeqImages(image_path, common_name = request.param, extra_config_path = demo_config)
 
     return im
 
@@ -24,6 +24,14 @@ def demo_config(request):
     config_path = image_path / Path('demo/machine_settings' + request.param)
 
     return str(config_path)
+
+def test_open_tiffs(demo_image):
+    assert demo_image.config is not None
+    assert demo_image.machine == 'Origin'
+    assert demo_image is not None
+    for d, d_ in zip(demo_image.im.dims, ['cycle', 'channel', 'obj_step', 'row', 'col']):
+        assert d == d_
+
 
 
 # parameterize for multiple images

@@ -6,3 +6,10 @@ virtual:
     740: 132
   max_pixel_value: 4095
 # registration
+Origin:
+  background:
+    558: 108
+    610: 154
+    687: 113
+    740: 132
+  max_pixel_value: 4095
