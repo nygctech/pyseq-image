@@ -29,6 +29,13 @@ from io import BytesIO
 from dask import delayed
 from dask_image.ndinterp import affine_transform
 
+
+from ome_zarr.io import parse_url
+from ome_zarr.writer import write_image
+from ome_zarr.reader import Reader
+from ome_types.model import Instrument, Microscope, Objective, Image, Pixels, Channel, OME, TiffData
+from ome_types import to_dict
+
 try:
     import importlib.resources as pkg_resources
 except ImportError:
@@ -706,7 +713,11 @@ class HiSeqImages():
                 filenames = glob.glob(path.join(image_path, common_name+'*.zarr'))
                 if len(filenames) > 0:
                     self.filenames = filenames
-                    section_names += self.open_zarr()
+                    try:             
+                        ome_metadata = zarr.open_group(path, mode = 'r').attrs["omero"]
+                        sections_names += self.read_ome_zarr(ome_metadata)
+                    except:
+                        section_names += self.open_zarr()
 
             if len(section_names) == 1:
                 self.name = section_names[0]
@@ -1573,5 +1584,123 @@ class HiSeqImages():
             except:
                 im = None
             self.im.append(im)
+
+        return im_names
+    
+    def write_ome_zarr(self, dir_path):
+        
+
+        instrument_ = Instrument(microscope = Microscope(**self.config['Microscope']), 
+                                 objectives = [Objective(**self.config['Objective'])])
+
+        ch558 = Channel(id = 0, name = '558', excitation_wavelength = 532, emission_wavelength = 558, color = '#00429d')
+        ch610 = Channel(id = 1, name = '610', excitation_wavelength = 532, emission_wavelength = 610, color = '#96ffea')
+        ch687 = Channel(id = 2, name = '687', excitation_wavelength = 660, emission_wavelength = 687, color = '#93003a')
+        ch740 = Channel(id = 3, name = '740', excitation_wavelength = 660, emission_wavelength = 740, color = '#ff005e')
+
+        if not isinstance(self.im, list):
+            self.im = [self.im]
+
+        for im in self.im:
+
+            pxs = Pixels(channels = [ch558, ch610, ch687, ch740], 
+                         dimension_order = 'XYZCT', #Place holder, actually dim order TCZYX
+                         size_x = len(im.col),
+                         size_y = len(im.row),
+                         size_z = len(im.obj_step),
+                         size_c = len(im.channel),
+                         size_t = len(im.cycle),
+                         tiff_data_blocks = [TiffData(first_z = im.obj_step.values[0], first_t = im.cycle.values[0])],
+                         **self.config['Pixels']
+                        )
+            description =f"""first_cycle = {im.cycle[0]},
+                            last_cycle = {im.cycle[-1]},
+                            first_objstep = {im.obj_step[0]},
+                            last_objstep = {im.obj_step[-1]},
+                            int_objstep = {im.obj_step[1]-im.obj_step[0]}
+                          """
+            ome = OME()
+            ome.images = [Image(name = im.name, pixels = pxs, description = description)]
+            ome.instruments = [instrument_]
+            ome.creator = __name__
+            ome_dict = to_dict(ome)
+
+            # Fix UnSerializable Fields
+            # Color Object Not JSON Serializable
+            nch = len(ome_dict['images'][0]['pixels']['channels'])
+            for i in range(nch):
+                color_val = ome_dict['images'][0]['pixels']['channels'][i]['color'].as_rgb_tuple()
+                ome_dict['images'][0]['pixels']['channels'][i]['color'] = color_val
+                
+            # Pixel Order Object Not JSON Serializable
+            ome_dict['images'][0]['pixels']['dimension_order'] = ome_dict['images'][0]['pixels']['dimension_order'].value[::-1]
+            ome_dict['images'][0]['pixels']['type'] = ome_dict['images'][0]['pixels']['type'].value
+            
+
+            # write the image data
+            try: 
+                mkdir(f'{dir_path}/{im.name}')
+                store = parse_url(dir_path, mode="w").store
+                root = zarr.group(store=store)
+                write_image(image=image.im.data, group=root, axes="tczyx", storage_options = {'chunks':(1, 1, 1, len(image.im.col), len(image.im.row))})
+                root.attrs["omero"] = ome_dict
+            except Exception as error:
+                self.logger.error("Error writing ome_zarr %s", error, exc_info=True)
+
+
+            return True
+
+    def read_ome_zarr(self, ome_metadata):
+
+
+        """Create labeled dataset from ome zarrs.
+
+           **Returns:**
+           - array: Labeled dataset
+
+        """
+
+
+        im_names = []
+        for fn in self.filenames:
+
+            reader = Reader(parse_url(fn, mode="r"))
+            # nodes may include images, labels etc
+            nodes = list(reader())
+            # first node will be the image pixel data
+            image_node = nodes[0]
+            im = image_node.data[0] # full res image data
+
+            # Read OME Metadata
+            im_name = ome_dict['images'][0]['name']
+            meta_dict = {}
+            for field in ome_metadata['images'][0]['description'].split(','):
+                fn, val = field.split('=')
+                meta_dict[fn.strip()] = int(val)
+            
+            # Map channel, cycle, and obj_step coordinates
+            coord_dict = {'C': [c['name'] for c in ome_dict['images'][0]['pixels']['channels']],
+                          'T': range(meta_dict['first_cycle'], meta_dict['last_cycle']+1),
+                          'Z': range(meta_dict['first_objstep'], meta_dict['last_objstep']+1, meta_dict['int_objstep'])
+                         }
+
+            dim_map = {'X': 'row', 'Y':'col', 'Z': 'obj_step', 'T': 'cycle', 'C': 'channel'}
+
+            dims_ = []; coords_ = {}
+            # loop through dimensions ie XYZCT
+            for d in ome_dict['images'][0]['pixels']['dimension_order']: 
+                d_name = dim_map[d]
+                dims_.append(d_name)
+                if d in 'CTZ':
+                    coords_[d_name] = coord_dict[d]
+
+            xr_im = im.append( xr.DataArray(data = im, coords = coords_, dims = dims_, name = im_name))
+            xr_im.attrs['omero'] = ome_metadata
+            xr_im.attrs['machine'] = ome_metadata['instruments'][0]['name']
+            self.config, config_path = get_machine_config(xr_im.machine)
+            if self.config is not None:
+                self.machine = im.machine
+            
+            im_names.append(im_name)
 
         return im_names

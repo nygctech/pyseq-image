@@ -3,6 +3,8 @@ import numpy as np
 import pytest
 from pathlib import Path
 from math import ceil
+import configparser
+from tempfile import TemporaryDirectory
 
 
 @pytest.fixture(params = ['m1a', 'm3b'])
@@ -31,6 +33,17 @@ def test_open_tiffs(demo_image):
     assert demo_image is not None
     for d, d_ in zip(demo_image.im.dims, ['cycle', 'channel', 'obj_step', 'row', 'col']):
         assert d == d_
+
+
+pytest.fixture(scope = "session")
+def test_write_ome_zarr(demo_image, tmp_path_factory):
+
+    if not isinstance(demo_image.config, configparser.ConfigParser):
+
+        # with TemporaryDirectory as f:
+        #     demo_image.write_ome_zarr(f)
+        assert demo_image.write_ome_zarr(tmp_path_factory)
+
 
 
 
