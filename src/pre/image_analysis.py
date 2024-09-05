@@ -1172,7 +1172,7 @@ class HiSeqImages():
         if not bool(self.im.overlap):
             if n_tiles > 1 and overlap > 0:
                 tiles = []
-                for t in range(n_tiles):
+                for t in range(n_tiles+1):
                     if direction == 'left':
                         cols = slice(2048*t+overlap,2048*(t+1))                 #initial columns are cropped from subsequent tiles
                         tiles.append(self.im.sel(col=cols))
