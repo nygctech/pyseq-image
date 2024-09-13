@@ -6,3 +6,29 @@ virtual:
     740: 132
   max_pixel_value: 4095
 # registration
+Origin:
+  Microscope:
+    manufacturer: Illumina
+    model: HiSeq2500
+    serial_number: SND10273
+  Objective:
+    manufacturer: Nikon
+    model: 20XAirNA0.75
+    lens_na: 0.75
+    nominal_magnification: 20
+  Pixels:
+    significant_bits: 12
+    physical_size_x: 0.375
+    physical_size_y: 0.375
+    type: int16
+  background:
+    558: 108
+    610: 154
+    687: 113
+    740: 132  
+  background:
+    558: 108
+    610: 154
+    687: 113
+    740: 132
+  max_pixel_value: 4095

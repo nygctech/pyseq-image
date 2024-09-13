@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 import logging
 
-def get_logger(logname = None, filehandler = None):
+def get_logger(logname = None, filehandler = None, **kwargs):
 
     if logname is  None:
         logname = __name__
