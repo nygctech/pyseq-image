@@ -5,11 +5,13 @@ import dask
 import dask.array as da
 from dask.diagnostics import ProgressBar
 import xarray as xr
-xr.set_options(keep_attrs=True)
 import zarr
-#import napari
+
+
+
 from math import log2, ceil, floor
-from os import listdir, stat, path, getcwd, mkdir
+from pathlib import Path
+from os import path, getcwd, mkdir
 from scipy import stats
 from scipy.spatial.distance import cdist
 import imageio
@@ -24,6 +26,7 @@ from skimage.morphology import square
 import yaml
 from pre.utils import get_config, get_logger
 import logging
+import traceback 
 
 from io import BytesIO
 from dask import delayed
@@ -36,6 +39,8 @@ from ome_zarr.reader import Reader
 from ome_types.model import Instrument, Microscope, Objective, Image, Pixels, Channel, OME, TiffData
 from ome_types import to_dict
 
+xr.set_options(keep_attrs=True)
+
 try:
     import importlib.resources as pkg_resources
 except ImportError:
@@ -44,7 +49,8 @@ except ImportError:
 #from . import resources
 #from .methods import userYN
 
-module_logger = logging.getLogger('ImageAnalysis')
+# logger = logging.getLogger('ImageAnalysis')
+logger = get_logger()
 
 
 def message(logger, *args):
@@ -450,7 +456,7 @@ def get_HiSeqImages(image_path=None, common_name='', **kwargs):
         return None
 
 
-def get_machine_config(machine, extra_config_path = '', **kwargs):
+def get_machine_config(machine, extra_config_path=None, **kwargs):
     '''Get machine settings config from default location.
 
       Default locations in order of preference:
@@ -468,39 +474,35 @@ def get_machine_config(machine, extra_config_path = '', **kwargs):
       config_path: Machine settings config path (str)
     '''
 
-    homedir = path.expanduser('~')
-
-    config_paths = [path.join(homedir,'.config', 'pyseq2500', 'machine_settings'),
-                    path.join(homedir,'.pyseq2500','machine_settings')]
-    config_paths.insert(0, extra_config_path)
+    config_paths = [Path.home() / '.config/pyseq2500/machine_settings',
+                    Path.home() / '.pyseq2500/machine_settings']
+    # if extra_config_path is not None:
+    config_paths.insert(0, Path(extra_config_path))
 
     config_path = None
     for p in config_paths:
-        if path.exists(p+'.yaml'):
-            config_path = p+'.yaml'
+        if p.with_suffix('.yaml').exists():
+            config_path = p.with_suffix('.yaml')
             break
-        elif path.exists(p+'.cfg'):
-            config_path = p+'.cfg'
-            break
-        elif path.exists(p):
-            config_path = p
+        elif p.with_suffix('.cfg').exists():
+            config_path = p.with_suffix('.cfg')
             break
 
     if config_path is None:
-        print(f'Config not found')
+        logger.error(f'Machine settings config not found')
         config = None
+    else:
+        config = get_config(config_path)
 
-    config = get_config(config_path)
-
-    if config_path[-4:] == 'yaml':
-        config = config.get(machine, None)
-    elif config_path[-3:] == 'cfg':
-        machine = str(machine).lower()
-        if machine not in config.options('machines'):
-            config = None
+        if config_path.suffix == '.yaml':
+            config = config.get(machine, None)
+        elif config_path.suffix == '.cfg':
+            machine = str(machine).lower()
+            if machine not in config.options('machines'):
+                config = None
 
     if config is None:
-        print('Settings for', machine, 'do not exist')
+        logger.error(f'Settings for {machine} do not exist')
 
     return config, config_path
 
@@ -616,26 +618,42 @@ def detect_channel_shift(image_path, common_name = '', ref_ch = 610):
 
     return ch_shift
 
+def get_image_files(path, suffix, common=None):
+    path = Path(path)
+    if path.is_dir():
+        files = [f for f in path.iterdir() if suffix in f.suffix]
+        if common is not None:
+            files = [f for f in files if common in f.stem]
+        return files
+    
+    if path.is_file():
+        files = [path]
+        return files
+    
+    raise FileNotFoundError
+
+
 
 
 class HiSeqImages():
     """HiSeqImages
 
        **Attributes:**
-        - im (dict): List of DataArray from sections
+        - im (dict): Xarray DataArray N-Dimensional Image
         - channel_color (dict): Dictionary of colors to display each channel as
-        - channel_shift (dict): Dictionary of how to register each channel
-        - stop (bool): Flag to close viewer
-        - app (QTWidget): Application instance
-        - viewer (napari): Napari viewer
-        - logger: Logger object to log communication with HiSeq and user.
-        - filenames: Files used to stitch image
+        - files: Files used to stitch image
 
 
     """
+    machine = None
+    resolution = 0.375                                                 # um/px
+    x_spum = 0.4096                                                    #steps per um
+    channel_color = {558:'blue', 610:'green', 687:'magenta', 740:'red'}
 
-    def __init__(self, image_path=None, common_name='',  im=None,
-                       obj_stack=None, RoughScan = False, **kwargs):
+    def __init__(self, im, machine=None, files=[], **kwargs):
+        
+        # image_path=None, common_name='',  im=None,
+        #                obj_stack=None, RoughScan = False, **kwargs):
         """The constructor for HiSeq Image Datasets.
 
            **Parameters:**
@@ -646,93 +664,104 @@ class HiSeqImages():
 
         """
 
-        self.im = []
-        self.channel_color = {558:'blue', 610:'green', 687:'magenta', 740:'red'}
-        self.channel_shift = {558:[93,None,0,None],
-                              610:[90,-3,0,None],
-                              687:[0,-93,0,None],
-                              740:[0,-93,0,None]}
-        self.stop = False
-        self.app = None
-        self.viewer = None
-        self.logger = get_logger(**kwargs)
-        self.filenames = []
-        self.resolution = 0.375                                                 # um/px
-        self.x_spum = 0.4096                                                    #steps per um
-        self.config  = None
-        self.machine = None
-
-        if im is None:
-
-            if image_path is None:
-                image_path = getcwd()
-            else:
-                image_path = str(image_path)
-
-            # Get machine config
-            name_path = path.join(image_path,'machine_name.txt')
-            if path.exists(name_path):
-                with open(name_path,'r') as f:
-                    machine = f.readline().strip()
-                self.config, config_path = get_machine_config(machine, **kwargs)
-            if self.config is not None:
-                self.machine = machine
-            if self.machine is None:
-                self.machine = ''
-
-            if len(common_name) > 0:
-                common_name = '*'+common_name
-
-            section_names = []
-
-            # Open zarr
-            if image_path[-4:] == 'zarr':
-                self.filenames = [image_path]
-                section_names = self.open_zarr()
-
-            elif obj_stack is not None:
-                # Open obj stack (jpegs)
-                #filenames = glob.glob(path.join(image_path, common_name+'*.jpeg'))
-                n_frames = self.open_objstack(obj_stack)
-
-            elif RoughScan:
-                # RoughScans
-                filenames = glob.glob(path.join(image_path,'*RoughScan*.tiff'))
-                if len(filenames) > 0:
-                    self.filenames = filenames
-                    n_tiles = self.open_RoughScan()
-
-            else:
-                # Open tiffs
-                filenames = glob.glob(path.join(image_path, common_name+'*.tiff'))
-                if len(filenames) > 0:
-                    self.filenames = filenames
-                    section_names += self.open_tiffs()
-
-                # Open zarrs
-                filenames = glob.glob(path.join(image_path, common_name+'*.zarr'))
-                if len(filenames) > 0:
-                    self.filenames = filenames
-                    try:             
-                        ome_metadata = zarr.open_group(path, mode = 'r').attrs["omero"]
-                        sections_names += self.read_ome_zarr(ome_metadata)
-                    except:
-                        section_names += self.open_zarr()
-
-            if len(section_names) == 1:
-                self.name = section_names[0]
-
-            if len(section_names) > 0:
-                section_names = ' '.join(section_names)
-                self.logger.info(f'Opened {section_names}')
-
-
+        self.im = im
+        self.name = im.name
+        self.files = files
+        if machine is None:
+            self.assign_machine()
         else:
-            self.machine = im.machine
-            if im.machine is not None:
-                self.config, config_path = get_machine_config(im.machine)
-            self.im = im
-            self.name = im.name
+            self.machine = machine
+        if self.machine is not None:
+            self.config, config_path = get_machine_config(im.machine, **kwargs)
+        
+
+        # if im is None:
+
+        #     if image_path is None:
+        #         image_path = getcwd()
+        #     else:
+        #         image_path = str(image_path)
+
+        #     # Get machine config
+        #     name_path = path.join(image_path,'machine_name.txt')
+        #     if path.exists(name_path):
+        #         with open(name_path,'r') as f:
+        #             machine = f.readline().strip()
+        #         self.config, config_path = get_machine_config(machine, **kwargs)
+        #     if self.config is not None:
+        #         self.machine = machine
+        #     if self.machine is None:
+        #         self.machine = ''
+
+        #     if len(common_name) > 0:
+        #         common_name = '*'+common_name
+
+        #     section_names = []
+
+        #     # Open zarr
+        #     if image_path[-4:] == 'zarr':
+        #         self.filenames = [image_path]
+        #         section_names = self.open_zarr()
+
+        #     elif obj_stack is not None:
+        #         # Open obj stack (jpegs)
+        #         #filenames = glob.glob(path.join(image_path, common_name+'*.jpeg'))
+        #         n_frames = self.open_objstack(obj_stack)
+
+        #     elif RoughScan:
+        #         # RoughScans
+        #         filenames = glob.glob(path.join(image_path,'*RoughScan*.tiff'))
+        #         if len(filenames) > 0:
+        #             self.filenames = filenames
+        #             n_tiles = self.open_RoughScan()
+
+        #     else:
+        #         # Open tiffs
+        #         filenames = glob.glob(path.join(image_path, common_name+'*.tiff'))
+        #         if len(filenames) > 0:
+        #             self.filenames = filenames
+        #             section_names += self.open_tiffs()
+
+        #         # Open zarrs
+        #         filenames = glob.glob(path.join(image_path, common_name+'*.zarr'))
+        #         if len(filenames) > 0:
+        #             self.filenames = filenames
+        #             try:             
+        #                 ome_metadata = zarr.open_group(path, mode = 'r').attrs["omero"]
+        #                 sections_names += self.read_ome_zarr(ome_metadata)
+        #             except:
+        #                 section_names += self.open_zarr()
+
+        #     if len(section_names) == 1:
+        #         self.name = section_names[0]
+
+        #     if len(section_names) > 0:
+        #         section_names = ' '.join(section_names)
+        #         self.logger.info(f'Opened {section_names}')
+
+
+        # else:
+        #     self.machine = im.machine
+        #     if im.machine is not None:
+        #         self.config, config_path = get_machine_config(im.machine)
+        #     self.im = im
+        #     self.name = im.name
+
+    def assign_machine(self):
+        config_path = Path.home() / '.config/pyseq2500/machine_settings.yaml'
+        if isinstance(self.files, list):
+            name_path = self.files[0].parent/'machine_name.txt'
+            if name_path.exists():
+                with open(name_path,'r') as f:
+                    self.machine = f.readline().strip()
+        elif config_path.exists():
+            config = get_config(config_path)
+            self.machine = config.get('name', None)
+        else:
+            logger.warning('Could not assign machine')
+
+        self.im.attrs['machine'] = self.machine
+
 
     def correct_background(self):
         # Maintain compatibility with older config files and
@@ -743,7 +772,7 @@ class HiSeqImages():
         elif isinstance(self.config, dict):
             im = self.correct_background_rescale()
         else:
-            self.logger.warning('CorrectBackground::Invalid config')
+            logger.warning('CorrectBackground::Invalid config')
             im = None
 
         return im
@@ -780,23 +809,21 @@ class HiSeqImages():
         else:
             pre_msg='CorrectBackground::'
             if bool(self.im.fixed_bg):
-                self.logger.info(pre_msg+'Image already background corrected.')
+                logger.info(pre_msg+'Image already background corrected.')
             elif machine is None:
-                self.logger.warning(pre_msg+'Unknown machine')
+                logger.warning(pre_msg+'Unknown machine')
 
         return self.im
 
     def correct_background_rescale(self):
         '''Rescale pixel values for each group to the average background.'''
 
-
-        self.logger.debug(f'initial name::{self.im.name}')
         new_min_dict = self.config.get('background')
         dark_dict = self.config.get('dark group')
         max_px = self.config.get('max_pixel_value')
 
         pre_msg = 'CorrectBackgroundRescale'
-        self.logger.debug(f'{pre_msg} :: max px :: {max_px}')
+        logger.debug(f'{pre_msg} :: max px :: {max_px}')
 
         ncols = len(self.im.col)
         ntiles = int(ncols/2048)
@@ -808,8 +835,7 @@ class HiSeqImages():
         for ch in self.im.channel.values:
             new_min = new_min_dict[ch]
             new_min_ = da.from_array([new_min] * ncols)
-            self.logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
-            #self.logger.debug(f'{pre_msg} :: channel {ch} dark px :: {dark_dict[ch]}')
+            logger.debug(f'{pre_msg} :: channel {ch} min px :: {new_min}')
 
             group_min_ = np.zeros(ncols)
             for t in range(ntiles):
@@ -823,10 +849,13 @@ class HiSeqImages():
             corrected = (((plane-group_min_).clip(min=0)/old_contrast * new_contrast) +  new_min_).astype('uint16')
             ch_list.append(corrected)
 
-        self.im = xr.concat(ch_list, dim='channel')
-        self.im.name = self.name
+        print(self.im)
+        _dims = tuple(['channel']+list(corrected.dims))
+        logger.error(_dims)
 
-        self.logger.debug(f'final name::{self.im.name}')
+        self.im = xr.concat(ch_list, dim='channel')
+        print(self.im)
+        self.im.name = self.name
 
         return self.im
 
@@ -839,7 +868,7 @@ class HiSeqImages():
         elif isinstance(self.config, dict):
             im = self.register_channels_affine()
         else:
-            self.logger.warning('Invalid config')
+            logger.warning('Invalid config')
             im = None
 
         return im
@@ -881,7 +910,7 @@ class HiSeqImages():
             if image is None:
                 self.im = img
         else:
-            self.logger.warning('registerChannelsShift :: Unknown machine')
+            logger.warning('registerChannelsShift :: Unknown machine')
 
         return img
 
@@ -908,7 +937,7 @@ class HiSeqImages():
         reg_config = self.config.get('registration', None)
 
         pre_msg = 'getRegistrationData ::'
-        self.logger.info(f'{pre_msg} {self.machine} registration data')
+        logger.info(f'{pre_msg} {self.machine} registration data')
 
         reg_dict = {}
         crop_bb = [top, bottom, left, right]
@@ -920,7 +949,7 @@ class HiSeqImages():
                 try:
                     shift = [float(s) for s in shift]
                 except:
-                    self.logger.warning(f'{pre_msg} Registration shift {shift} for channel {ch} is invalid')
+                    logger.warning(f'{pre_msg} Registration shift {shift} for channel {ch} is invalid')
 
                 A = np.identity(3)
                 A[0,2] = -shift[0]
@@ -928,9 +957,9 @@ class HiSeqImages():
                 reg_dict[int(ch)]=A
                 crop_bb = self.update_crop_bb(crop_bb, shift)
 
-                self.logger.info(f'{pre_msg} Channel {ch} :: {shift}')
+                logger.info(f'{pre_msg} Channel {ch} :: {shift}')
 
-            self.logger.info(f'{pre_msg} :: Crop bounding box :: {crop_bb} (top, bottom, left, right)')
+            logger.info(f'{pre_msg} :: Crop bounding box :: {crop_bb} (top, bottom, left, right)')
         else:
             raise ValueError(f'Registration data for {machine} not found')
 
@@ -1044,7 +1073,7 @@ class HiSeqImages():
         ncols = self.im.col.size
         nobj_steps = self.im.obj_step.size
         
-        self.logger.info(f'Projecting cycle {cycle}, channel {channel}')
+        logger.info(f'Projecting cycle {cycle}, channel {channel}')
         image = self.im.sel(cycle=1, channel=610)
         im_min = image.min().values
         im_max = image.max().values
@@ -1052,7 +1081,7 @@ class HiSeqImages():
         col_chunk = image.chunksizes['col'][0]
         row_chunk = image.chunksizes['row'][0]
         window = col_chunk
-        self.logger.info(f'Window size = {window} pixels')
+        logger.info(f'Window size = {window} pixels')
 
         filter_size = ceil(1/overlap) + 1
         overlap = int(overlap*window)
@@ -1092,11 +1121,11 @@ class HiSeqImages():
 
         # Find z slice that is most in focus for each window
         focus_map = focus_vals.argmax(axis = 2)
-        self.logger.info(f'Begin computing focus map from {focus_map.size} windows')
+        logger.info(f'Begin computing focus map from {focus_map.size} windows')
         focus_map = focus_map.compute()
-        self.logger.info('Finished computing focus map')
-        self.logger.debug('Focus Map')
-        self.logger.debug(focus_map)
+        logger.info('Finished computing focus map')
+        logger.debug('Focus Map')
+        logger.debug(focus_map)
 
         # Median filter focus map
         if smooth:
@@ -1157,7 +1186,7 @@ class HiSeqImages():
             overlap=int(overlap)
             n_tiles = ceil(len(self.im.col)/2048)
         except:
-            message(self.logger, 'overlap must be an integer')
+            logger.error('overlap must be an integer')
 
         try:
             if direction.lower() in ['l','le','lef','left','lft','lt']:
@@ -1167,7 +1196,7 @@ class HiSeqImages():
             else:
                 raise ValueError
         except:
-            message(self.logger, 'overlap direction must be either left or right')
+            logger.error('overlap direction must be either left or right')
 
         if not bool(self.im.overlap):
             if n_tiles > 1 and overlap > 0:
@@ -1184,64 +1213,9 @@ class HiSeqImages():
 
                 self.im = im
         else:
-            message(self.logger, 'Overlap already removed')
+            logger.info('Overlap already removed')
 
 
-
-    def hs_napari(self, dataset):
-
-        with napari.gui_qt() as app:
-            viewer = napari.Viewer()
-            self.viewer = viewer
-            self.app = app
-
-            self.update_viewer(dataset)
-            start = time.time()
-
-            # timer for exiting napari
-            timer = QTimer()
-            timer.timeout.connect(self.quit)
-            timer.start(1000*1)
-
-            @viewer.bind_key('x')
-            def crop(viewer):
-                if 'Shapes' in viewer.layers:
-                    bound_box = np.array(viewer.layers['Shapes'].data).squeeze()
-                else:
-                    bound_box = np.array(False)
-
-                if bound_box.shape[0] == 4:
-
-                    #crop full dataset
-                    self.crop_section(bound_box)
-                    #save current selection
-                    selection = {}
-                    for d in self.im.dims:
-                        if d not in ['row', 'col']:
-                            if d in dataset.dims:
-                                selection[d] = dataset[d]
-                            else:
-                                selection[d] = dataset.coords[d].values
-                    # update viewer
-                    cropped = self.im.sel(selection)
-                    self.update_viewer(cropped)
-
-
-    def show(self, selection = {}, show_progress = True):
-        """Display a section from the dataset.
-
-           **Parameters:**
-            - selection (dict): Dimension and dimension coordinates to display
-
-        """
-
-        dataset  = self.im.sel(selection)
-
-        if show_progress:
-            with ProgressBar() as pbar:
-                self.hs_napari(dataset)
-        else:
-            self.hs_napari(dataset)
 
     def downscale(self, scale=None):
         if scale is None:
@@ -1303,30 +1277,6 @@ class HiSeqImages():
                               col=slice(col_min, col_max))
         self.im.attrs['first_group'] = group_index
 
-    def update_viewer(self, dataset):
-
-        viewer = self.viewer
-        # Delete old layers
-        for i in range(len(viewer.layers)):
-            viewer.layers.pop(0)
-
-        # Display only 1 layer if there is only 1 channel
-        channels = dataset.channel.values
-
-        if not channels.shape:
-            ch = int(channels)
-            message(self.logger, 'Adding', ch, 'channel')
-            layer = viewer.add_image(dataset.values,
-                                     colormap=self.channel_color[ch],
-                                     name = str(ch),
-                                     blending = 'additive')
-        else:
-            for ch in channels:
-                message(self.logger, 'Adding', ch, 'channel')
-                layer = viewer.add_image(dataset.sel(channel = ch).values,
-                                         colormap=self.channel_color[ch],
-                                         name = str(ch),
-                                         blending = 'additive')
 
 
     def save_zarr(self, save_path, show_progress = True, name=None, **kwargs):
@@ -1339,12 +1289,14 @@ class HiSeqImages():
 
         """
 
-        if path.isdir(save_path):
+        save_path = Path(save_path)
+
+        if save_path.is_dir():
 
             if name is None:
-                save_name = path.join(save_path,self.im.name+'.zarr')
+                save_name = save_path/f'{self.im.name}.zarr'
             else:
-                save_name = path.join(save_path,str(name)+'.zarr')
+                save_name = save_path/f'{name}.zarr'
             # Remove coordinate for unused dimensions
             for c in self.im.coords.keys():
                 if c not in self.im.dims:
@@ -1358,17 +1310,42 @@ class HiSeqImages():
 
 
             # save attributes
-            f = open(path.join(save_path, self.im.name+'.attrs'),"w")
-            for key, val in self.im.attrs.items():
-                f.write(str(key)+' '+str(val)+'\n')
-            f.close()
+            with open(save_name.with_suffix('.yaml'), 'w') as f:
+                yaml.dump(self.im.attrs, f)
 
             return output
 
         else:
-            raise ValueError(f'{save_path} is not an existing directory')
+            raise NotADirectoryError(f'{save_path} is not an existing directory')
+        
+    @staticmethod
+    def read_xr_attrs(path):
 
-    def open_zarr(self):
+        attrs = {}
+        # Old method of reading xarray zarr store attributes 
+        if path.with_suffix('.attrs').exists():
+
+            with open(path) as f:
+                for line in f:
+                    items = line.split()
+                    if len(items) == 2:
+                        try:
+                            value = int(items[1])
+                        except ValueError: 
+                            value = items[1]
+                    else:
+                        value = ''
+                    attrs[items[0]] = value
+
+        # New method readying from yaml 
+        if path.with_suffix('.yaml').exists():
+            with open(path.with_suffix('.yaml')) as f:
+                attrs = yaml.safe_load(f)
+        
+        return attrs
+
+    @classmethod
+    def open_zarr(cls, path, common=None, **kwargs):
         """Create labeled dataset from zarrs.
 
            **Parameters:**
@@ -1379,61 +1356,55 @@ class HiSeqImages():
 
         """
 
-        im_names = []
-        for fn in self.filenames:
-            im_name = path.basename(fn)[:-5]
-            im = xr.open_zarr(fn).to_array()
-            im = im.squeeze().drop_vars('variable').rename(im_name)
-            im_names.append(im_name)
+        files = get_image_files(path, 'zarr', common)
+        images = []
+        for f in files:
+            try: 
+                im_name = f.stem
+                im = xr.open_zarr(f).to_array()
+                im = im.squeeze().drop_vars('variable').rename(im_name)
 
-            # add attributes
-            attr_path = fn[:-5]+'.attrs'
+                # add attributes
+                attrs = cls.read_xr_attrs(f)
+                if 'machine' not in attrs.keys():
+                    attrs['machine'] = None
+                if len(attrs) > 0:
+                    im = im.assign_attrs(**attrs)
+                print(im.attrs)
 
-            if path.exists(attr_path):
-                attrs = {}
-                with open(attr_path) as f:
-                    for line in f:
-                        items = line.split()
-                        if len(items) == 2:
-                            try:
-                                value = int(items[1])
-                            except:
-                                value = items[1]
-                        else:
-                            value = ''
-                        im.attrs[items[0]] = value
+                hsim = cls(im, machine=im.attrs['machine'], **kwargs)
+                hsim.files = f
+                images.append(hsim)
+            except Exception:
+                logger.error(f'Could not open {f}')
+                logger.error(traceback.format_exc())
 
-            if hasattr(im, 'machine'):
-                if im.machine in ['', 'None']:
-                    im.attrs['machine'] = None
-                    self.machine = None
-                else:
-                    self.config, config_path = get_machine_config(im.machine)
-                    if self.config is not None:
-                        self.machine = im.machine
-
-            self.im.append(im)
-
-        return im_names
+        n_images = len(images)    
+        if n_images > 1:
+            return images
+        elif n_images == 1:
+            return images[0]
 
 
-    def open_RoughScan(self):
+    @classmethod
+    def open_RoughScan(cls, path, **kwargs):
 
         # Open RoughScan tiffs
-        filenames = self.filenames
+        files = get_image_files(path, 'zarr', 'RoughScan')
+
 
         comp_sets = dict()
-        for fn in filenames:
+        for f in files:
             # Break up filename into components
-            comp_ = path.basename(fn)[:-5].split("_")
+            comp_ = f.stem
             for i, comp in enumerate(comp_):
                 comp_sets.setdefault(i,set())
                 comp_sets[i].add(comp)
 
-        shape = imageio.imread(filenames[0]).shape
-        lazy_arrays = [dask.delayed(imageio.imread)(fn) for fn in filenames]
+        shape = imageio.imread(files[0]).shape
+        lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
         lazy_arrays = [da.from_delayed(x, shape=shape, dtype='int16') for x in lazy_arrays]
-        #images = [imageio.imread(fn) for fn in filenames]
+
 
         # Organize images
         #0 channel, 1 RoughScan, 2 x_step, 3 obj_step
@@ -1443,8 +1414,8 @@ class HiSeqImages():
         fn_comp_sets = list(map(sorted, fn_comp_sets))
         remap_comps = [fn_comp_sets[0], [1], fn_comp_sets[2]]
         a = np.empty(tuple(map(len, remap_comps)), dtype=object)
-        for fn, x in zip(filenames, lazy_arrays):
-            comp_ = path.basename(fn)[:-5].split("_")
+        for f, x in zip(files, lazy_arrays):
+            comp_ = f.stem
             channel = fn_comp_sets[0].index(int(comp_[0][1:]))
             x_step = fn_comp_sets[2].index(int(comp_[2][1:]))
             a[channel, 0, x_step] = x
@@ -1459,13 +1430,19 @@ class HiSeqImages():
                                coords = coord_values,
                                name = 'RoughScan')
 
-        im = im.assign_attrs(first_group = 0, machine = self.machine, scale=1,
+        # Assign Attributes
+        im = im.assign_attrs(first_group = 0, scale=1,
                              overlap=0, fixed_bg = 0)
-        self.im = im.sel(row=slice(64,None))
+        # Remove top header
+        im = im.sel(row=slice(64,None))
+        
+        hsim = cls(im)
+        hsim.files = files
 
-        return len(fn_comp_sets[2])
+        return hsim
 
-    def open_objstack(self, obj_stack):
+    @classmethod
+    def open_objstack(cls, obj_stack, **kwargs):
 
         dim_names = ['frame', 'channel', 'row', 'col']
         channels = [687, 558, 610, 740]
@@ -1476,18 +1453,18 @@ class HiSeqImages():
                                coords = coord_values,
                                name = 'Objective Stack')
 
-        im = im.assign_attrs(first_group = 0, machine = self.machine, scale=1,
+        im = im.assign_attrs(first_group = 0, scale=1,
                              overlap=0, fixed_bg = 0)
-        self.im = im
+    
+        return cls(im)
 
-        return obj_stack.shape[0]
-
-
-    def open_tiffs(self):
+    @classmethod
+    def open_tiffs(cls, path, common=None, **kwargs):
         """Create labeled dataset from tiffs.
 
            **Parameters:**
-           - filename(list): List of full file path names to images
+           - path: Directory where tiffs are located
+           - common (str): Common image name
 
            **Returns:**
            - array: Labeled dataset
@@ -1495,30 +1472,30 @@ class HiSeqImages():
         """
 
         # Open tiffs
-        filenames = self.filenames
+        files = get_image_files(path, 'tiff', common)
         section_sets = dict()
         section_meta = dict()
-        for fn in filenames:
+        for f in files:
             # Break up filename into components
-            comp_ = path.basename(fn)[:-5].split("_")
+            comp_ = f.stem.split('_')
             if len(comp_) >= 6:
                 section = comp_[2]
                 # Add new section
                 if section_sets.setdefault(section, dict()) == {}:
-                    im = imageio.imread(fn)
-                    section_meta[section] = {'shape':im.shape,'dtype':im.dtype,'filenames':[]}
+                    im = imageio.imread(f)
+                    section_meta[section] = {'shape':im.shape,'dtype':im.dtype,'files':[]}
 
                 for i, comp in enumerate(comp_):
                     # Add components
                     section_sets[section].setdefault(i, set())
                     section_sets[section][i].add(comp)
-                    section_meta[section]['filenames'].append(fn)
+                    section_meta[section]['files'].append(f)
 
-        im_names = []
+        images = []
         for s in section_sets.keys():
             # Lazy open images
-            filenames = section_meta[s]['filenames']
-            lazy_arrays = [dask.delayed(imageio.imread)(fn) for fn in filenames]
+            files = section_meta[s]['files']
+            lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
             shape = section_meta[s]['shape']
             dtype = section_meta[s]['dtype']
             lazy_arrays = [da.from_delayed(x, shape=shape, dtype=dtype) for x in lazy_arrays]
@@ -1537,19 +1514,19 @@ class HiSeqImages():
                 i = comp_order['i']
                 fn_comp_sets[i] = [int(x) for x in fn_comp_sets[i]]
                 fn_comp_sets[i] = sorted(fn_comp_sets[i])
-                remap_comps = [fn_comp_sets[3], fn_comp_sets[0], fn_comp_sets[4], fn_comp_sets[6], [1],  fn_comp_sets[5]]
+                remap_comps = [fn_comp_sets[0], fn_comp_sets[3], fn_comp_sets[4], fn_comp_sets[6], [1],  fn_comp_sets[5]]
                 # List of sorted x steps for calculating overlap
                 #x_steps = sorted(list(fn_comp_sets[5]), reverse=True)
                 x_steps = fn_comp_sets[5]
             else:
-                remap_comps = [fn_comp_sets[3], fn_comp_sets[0], fn_comp_sets[5], [1],  fn_comp_sets[4]]
+                remap_comps = [fn_comp_sets[0], fn_comp_sets[3], fn_comp_sets[5], [1],  fn_comp_sets[4]]
                 # List of sorted x steps for calculating overlap
                 #x_steps = sorted(list(fn_comp_sets[4]), reverse=True)
                 x_steps = fn_comp_sets[4]
 
             a = np.empty(tuple(map(len, remap_comps)), dtype=object)
-            for fn, x in zip(filenames, lazy_arrays):
-                comp_ = path.basename(fn)[:-5].split("_")
+            for f, x in zip(files, lazy_arrays):
+                comp_ = f.stem.split('_')
                 channel = fn_comp_sets[0].index(int(comp_[0][1:]))
                 cycle = fn_comp_sets[3].index(int(comp_[3][1:]))
                 co = comp_order['o']
@@ -1559,33 +1536,36 @@ class HiSeqImages():
                 if 'i' in comp_order.keys():
                     co = comp_order['i']
                     image_i = fn_comp_sets[co].index(int(comp_[co]))
-                    a[cycle, channel, image_i, obj_step, 0, x_step] = x
+                    a[channel, cycle, image_i, obj_step, 0, x_step] = x
                 else:
-                    a[cycle, channel, obj_step, 0, x_step] = x
+                    a[channel, cycle, obj_step, 0, x_step] = x
 
             # Label array
             if 'i' in comp_order.keys():
-                dim_names = ['cycle','channel', 'image', 'obj_step', 'row', 'col']
+                dim_names = ['channel', 'cycle', 'image', 'obj_step', 'row', 'col']
                 coord_values = {'cycle':fn_comp_sets[3], 'channel':fn_comp_sets[0],'image':fn_comp_sets[4], 'obj_step':fn_comp_sets[6]}
             else:
-                dim_names = ['cycle', 'channel', 'obj_step', 'row', 'col']
+                dim_names = ['channel', 'cycle', 'obj_step', 'row', 'col']
                 coord_values = {'cycle':fn_comp_sets[3], 'channel':fn_comp_sets[0], 'obj_step':fn_comp_sets[5]}
             try:
                 im = xr.DataArray(da.block(a.tolist()),
                                        dims = dim_names,
                                        coords = coord_values,
                                        name = s[1:])
+                im = im.assign_attrs(first_group = 0, scale=1, overlap=0, fixed_bg = 0)
+                hsim = cls(im, files=files, **kwargs)
+                images.append(hsim)
+            except Exception:
+                logger.error('Could not make create DataArray for {s}')
+                logger.error(traceback.format_exc())
 
 
-                #im = self.register_channels(im.squeeze())
-                im = im.assign_attrs(first_group = 0, machine = self.machine,
-                                     scale=1, overlap=0, fixed_bg = 0)
-                im_names.append(s[1:])
-            except:
-                im = None
-            self.im.append(im)
+            n_images = len(images)
+            if n_images > 1:
+                return images
+            elif n_images == 1:
+                return images[0]
 
-        return im_names
     
     def write_ome_zarr(self, dir_path):
         
@@ -1645,7 +1625,7 @@ class HiSeqImages():
                 write_image(image=image.im.data, group=root, axes="tczyx", storage_options = {'chunks':(1, 1, 1, len(image.im.col), len(image.im.row))})
                 root.attrs["omero"] = ome_dict
             except Exception as error:
-                self.logger.error("Error writing ome_zarr %s", error, exc_info=True)
+                logger.error("Error writing ome_zarr %s", error, exc_info=True)
 
 
             return True
