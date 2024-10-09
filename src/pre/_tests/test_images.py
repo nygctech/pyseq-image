@@ -2,9 +2,8 @@ from pre import image_analysis as ia
 import numpy as np
 import pytest
 from pathlib import Path
-from math import ceil
 import configparser
-from tempfile import TemporaryDirectory
+# from tempfile import TemporaryDirectory
 
 
 
@@ -50,20 +49,9 @@ def test_open_tiffs(demo_image):
         assert d == d_
 
 
-@pytest.fixture(scope = "session")
-def test_write_ome_zarr(demo_image, tmp_path_factory):
-
-    if not isinstance(demo_image.config, configparser.ConfigParser):
-        omezarrpath = tmp_path_factory.mktemp('omezarr')
-        assert demo_image.write_ome_zarr(omezarrpath)
-        return omezarrpath
     
 @pytest.fixture()
 def xr_zarr(demo_image, tmp_path_factory):   
-    
-    # image_path = Path(ia.__file__).parents[2] / Path('src/demo/images')
-    # config_path =  Path(ia.__file__).parents[2] / Path('src/demo/machine_settings.yaml')
-    # im = ia.HiSeqImages.open_tiffs(image_path, common='m1a', extra_config_path=config_path)
 
     xrzarrpath = tmp_path_factory.mktemp('xrzarr')
     demo_image.save_zarr(xrzarrpath)
@@ -77,6 +65,26 @@ def test_xr_zarr(xr_zarr, demo_config):
     assert im.config is not None
     assert im.machine == 'Origin'
     for d, d_ in zip(im.im.dims, ['channel', 'cycle', 'obj_step', 'row', 'col']):
+        assert d == d_
+
+@pytest.fixture()
+def ome_zarr(demo_image, tmp_path_factory):   
+
+    if not isinstance(demo_image.config, configparser.ConfigParser):
+        omezarrpath = tmp_path_factory.mktemp('omezarr')
+        demo_image.save_ome_zarr(omezarrpath, compute=True)
+
+        return omezarrpath
+
+def test_ome_zarr(ome_zarr, demo_config):
+
+    im = ia.HiSeqImages.open_zarr(ome_zarr, extra_config_path=demo_config)
+
+    assert im is not None
+    assert im.config is not None
+    assert im.machine == 'Origin'
+    assert im.im.attrs['omero'].get('images')[0] is not None
+    for d, d_ in zip(im.im.dims, ['cycle', 'channel', 'obj_step', 'row', 'col']):
         assert d == d_
 
 

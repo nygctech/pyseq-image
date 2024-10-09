@@ -10,7 +10,7 @@ Origin:
   Microscope:
     manufacturer: Illumina
     model: HiSeq2500
-    serial_number: SND10273
+    serial_number: Origin,SND10273
   Objective:
     manufacturer: Nikon
     model: 20XAirNA0.75
@@ -21,6 +21,23 @@ Origin:
     physical_size_x: 0.375
     physical_size_y: 0.375
     type: int16
+  channels:
+    558:
+      excitation_wavelength: 532
+      emission_wavelength: 558
+      color: '#00429d'
+    610: 
+      excitation_wavelength: 532
+      emission_wavelength: 610
+      color: '#96ffea'
+    687:
+      excitation_wavelength: 660
+      emission_wavelength: 687
+      color: '#93003a'
+    740:
+      excitation_wavelength: 660
+      emission_wavelength: 740
+      color: '#ff005e'
   background:
     558: 108
     610: 154
