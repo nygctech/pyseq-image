@@ -10,7 +10,7 @@ import traceback
 
 
 
-from math import log2, ceil, floor
+from math import log2, ceil, floor, log
 from pathlib import Path
 from os import path, getcwd, mkdir, makedirs
 from scipy import stats
@@ -1215,6 +1215,70 @@ class HiSeqImages():
                 self.im = im
         else:
             logger.info('Overlap already removed')
+
+    @staticmethod
+    def save_jpeg(save_path, im, downscale=4):
+
+        save_path = Path(save_path).with_suffix('.jpg')
+
+        mid_log = log(0.5*255)
+        
+        jpegim = im.coarsen(row=downscale, col=downscale, boundary='trim').mean().astype('int16')
+
+        # compute background px value = mode + std
+        flat_ch = jpegim.data.flatten()
+        hist_counts = da.bincount(flat_ch).compute()
+        std = flat_ch.std().compute()
+        mode = hist_counts.argmax()
+        bg = std + mode
+
+        # compute max as 99.75% px value
+        max_px = da.percentile(flat_ch, 99.75).compute()
+
+        # Compute mean and gamma correction 
+        mean = flat_ch[flat_ch > bg].mean().compute()
+        gamma =  mid_log / log(mean)
+
+        # min / max normalize
+        jpegim = (jpegim - bg) / (max_px - bg)
+        jpegim = jpegim.clip(min = 0, max = 1)
+
+        # gamma correct
+        jpegim = (255 * (jpegim ** gamma)).astype('uint8')
+
+        # write image
+        imageio.imwrite(save_path, jpegim)
+
+
+    def preview_jpeg(self, image_path=None, downscale=4, sel={}, im_name=''):
+        
+        if image_path is None:
+            image_path = getcwd()
+        image_path = Path(image_path)
+        
+        
+        # Select channel/cycles to make previews
+        im = self.im
+        if len(sel) > 0:
+            im = self.im.sel(sel)
+
+        # zmax project
+        if 'obj_step' in im.dims:
+            im = im.max(dim='obj_step')
+
+        if 'cycle' in im.dims and 'channel' in im.dims:
+            for cy in im.cycle:
+                for ch in im.channel:
+                    im_name = image_path / f'{im.name}_r{cy}_ch{ch}.jpg'
+                    self.save_jpeg(im_name, im.sel(cycle=cy, channel=ch))
+        elif 'marker' in im.dims:
+            for m in im.marker:
+                im_name = image_path / f'{im.name}_{marker}.jpg'
+                self.save_jpeg(im_name, im.sel(marker=m))
+        elif len(im.dims) == 2:
+            im_name = image_path / f'{im.name}_{im_name}.jpg'
+            self.save_jpeg(im_name, im)
+                    
 
 
 

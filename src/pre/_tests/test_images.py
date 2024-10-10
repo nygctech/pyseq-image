@@ -127,3 +127,10 @@ def test_focus_projection(demo_image):
     assert demo_image.im.shape[-2:] == (rows, cols)
     assert np.all(np.logical_or(focus_map == 1, focus_map == 0))
     assert 'obj_step' not in demo_image.im.dims
+
+def test_preview_jpeg(demo_image, tmp_path_factory):
+    previewpath = tmp_path_factory.mktemp('preview')
+    demo_image.preview_jpeg(previewpath)
+    for cy in demo_image.im.cycle:
+        for ch in demo_image.im.channel:
+            assert (previewpath/f'{demo_image.im.name}_r{cy}_ch{ch}.jpg').exists()
