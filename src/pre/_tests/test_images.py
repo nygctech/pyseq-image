@@ -15,7 +15,7 @@ def demo_image(request, demo_config):
     # also have demo configs in demo folder
     image_path = Path(ia.__file__).parents[2] / Path('src/demo/images')
     # Reads 2 sections; m1a and m3b, return 1 it doesn't matter which
-    im = ia.HiSeqImages.open_tiffs(image_path, common_name=request.param, extra_config_path=demo_config)
+    im = ia.HiSeqImages.open_tiffs(image_path, common=request.param, extra_config_path=demo_config)
     # im = ia.get_HiSeqImages(image_path, common_name = request.param, extra_config_path = demo_config)
 
     return im
@@ -134,3 +134,10 @@ def test_preview_jpeg(demo_image, tmp_path_factory):
     for cy in demo_image.im.cycle:
         for ch in demo_image.im.channel:
             assert (previewpath/f'{demo_image.im.name}_r{cy}_ch{ch}.jpg').exists()
+
+def test_get_HiSeqImages(demo_config):
+    image_path = Path(ia.__file__).parents[2] / Path('src/demo/images')
+    ims = ia.get_HiSeqImages(image_path, extra_config_path=demo_config)
+    assert len(ims) == 2
+    ims = ia.get_HiSeqImages(image_path, common_name='m3b', extra_config_path=demo_config)
+    assert isinstance(ims, ia.HiSeqImages)

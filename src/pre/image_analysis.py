@@ -7,6 +7,7 @@ from dask.diagnostics import ProgressBar
 import xarray as xr
 import zarr
 import traceback
+from collections import defaultdict
 
 
 
@@ -444,17 +445,63 @@ def compute_background(image_path=None, common_name = ''):
 
 def get_HiSeqImages(image_path=None, common_name='', **kwargs):
 
+    # Get and sort image files
+    if image_path is None:
+        image_path = getcwd()
+    image_path = Path(image_path)
+    files = get_image_files(image_path, ['.zarr', '.tiff'], common=common_name)
+    if isinstance(files, dict):
+        zarr_files = files['.zarr']
+        tiff_files = files['.tiff']
+    elif isinstance(files, list):
+        if files[0].suffix == '.tiff':
+            tiff_files = files
+            zarr_files = []
+        if files[0].suffix == '.zarr':
+            zarr_files = files
+            tiff_files = []
 
-    ims = HiSeqImages(image_path, common_name, **kwargs)
-    ims_ = [im for im in ims.im if im is not None]
-    n_images = len(ims_)
+    # Open images
+    images = []
+    if len(zarr_files) > 0:
+        for f in zarr_files:
+            images.append(HiSeqImages.open_zarr(f, **kwargs))
+    if len(tiff_files) > 0:
+        ims = HiSeqImages.open_tiffs(files=files, **kwargs)
+        if isinstance(ims, list):
+            images += ims 
+        elif ims is not None:
+            images.append(ims)
+
+    # Return Images
+    n_images = len(images)
     if n_images > 1:
-        return [HiSeqImages(im=i) for i in ims_]
+        return images
     elif n_images == 1:
-        ims.im = ims_[0]
-        return ims
+        return images[0]
     else:
-        return None
+        raise FileNotFoundError(f'No images found in {image_path}')
+    
+
+    # files = get_image_files(path, 'zarr', common)
+    #     images = []
+    #     for f in files:
+    #         try:             
+    #             ome_metadata = zarr.open_group(f, mode = 'r').attrs["omero"]
+    #             im = cls.open_ome_zarr(ome_metadata, path, **kwargs)
+    #         except KeyError:
+    #             im = cls.open_xr_zarr(path, **kwargs)      
+
+    #         if isinstance(im, list):
+    #             images =+ im 
+    #         else:
+    #             images.append(im)
+
+    #     n_images = len(images)    
+    #     if n_images > 1:
+    #         return images
+    #     elif n_images == 1:
+    #         return images[0]
 
 
 def get_machine_config(machine, extra_config_path=None, **kwargs):
@@ -619,19 +666,31 @@ def detect_channel_shift(image_path, common_name = '', ref_ch = 610):
 
     return ch_shift
 
-def get_image_files(path, suffix, common=None):
+def get_image_files(path, suffix, common=''):
+
+    if isinstance(suffix, str):
+        suffix = [suffix]
+    for i, s in enumerate(suffix):
+        if s[0] != '.':
+            suffix[i] = f'.{s}'
+
     path = Path(path)
+    files = defaultdict(list)
+
+    if path.suffix == '.zarr' and common in path.stem:
+        files[path.suffix].append(path)
+
     if path.is_dir():
-        files = [f for f in path.iterdir() if suffix in f.suffix]
-        if common is not None:
-            files = [f for f in files if common in f.stem]
+        for f in path.iterdir():
+            if f.suffix in suffix and common in f.stem:
+                files[f.suffix].append(f)
+
+    if len(files) == 0:
+        raise FileNotFoundError(f'No files with {suffix} found in {path}')
+    elif len(files) == 1:
+        return files[list(files.keys())[0]]
+    else:
         return files
-    
-    if path.is_file():
-        files = [path]
-        return files
-    
-    raise FileNotFoundError
 
 
 
@@ -1410,7 +1469,7 @@ class HiSeqImages():
         return attrs
 
     @classmethod
-    def open_zarr(cls, path, common=None, **kwargs):
+    def open_zarr(cls, path, common='', **kwargs):
         """Open xarray or OME saved zarrs.
            **Parameters:**
            - path(str): Directory to open zarrs from
@@ -1442,7 +1501,7 @@ class HiSeqImages():
             return images[0]
 
     @classmethod
-    def open_xr_zarr(cls, path, common=None, **kwargs):
+    def open_xr_zarr(cls, path, common='', **kwargs):
         """Create labeled dataset from zarrs.
 
           
@@ -1558,7 +1617,7 @@ class HiSeqImages():
         return cls(im)
 
     @classmethod
-    def open_tiffs(cls, path, common=None, **kwargs):
+    def open_tiffs(cls, path='', files=[], common='', **kwargs):
         """Create labeled dataset from tiffs.
 
            **Parameters:**
@@ -1571,7 +1630,8 @@ class HiSeqImages():
         """
 
         # Open tiffs
-        files = get_image_files(path, 'tiff', common)
+        if len(files) == 0:
+            files = get_image_files(path, 'tiff', common)
         section_sets = dict()
         section_meta = dict()
         for f in files:
@@ -1589,7 +1649,6 @@ class HiSeqImages():
                     section_sets[section].setdefault(i, set())
                     section_sets[section][i].add(comp)
                     section_meta[section]['files'].append(f)
-
         images = []
         for s in section_sets.keys():
             # Lazy open images
@@ -1659,11 +1718,11 @@ class HiSeqImages():
                 logger.error(traceback.format_exc())
 
 
-            n_images = len(images)
-            if n_images > 1:
-                return images
-            elif n_images == 1:
-                return images[0]
+        n_images = len(images)
+        if n_images > 1:
+            return images
+        elif n_images == 1:
+            return images[0]
 
     
     def save_ome_zarr(self, dir_path, compute=False):
@@ -1755,7 +1814,7 @@ class HiSeqImages():
         
 
     @classmethod
-    def open_ome_zarr(cls, ome_metadata, path, common=None, **kwargs):
+    def open_ome_zarr(cls, ome_metadata, path, common='', **kwargs):
 
 
         """Create labeled dataset from ome zarrs.
