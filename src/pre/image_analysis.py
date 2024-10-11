@@ -1332,7 +1332,7 @@ class HiSeqImages():
                     self.save_jpeg(im_name, im.sel(cycle=cy, channel=ch))
         elif 'marker' in im.dims:
             for m in im.marker:
-                im_name = image_path / f'{im.name}_{marker}.jpg'
+                im_name = image_path / f'{im.name}_{m}.jpg'
                 self.save_jpeg(im_name, im.sel(marker=m))
         elif len(im.dims) == 2:
             im_name = image_path / f'{im.name}_{im_name}.jpg'
