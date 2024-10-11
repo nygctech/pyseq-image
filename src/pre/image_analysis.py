@@ -524,8 +524,8 @@ def get_machine_config(machine, extra_config_path=None, **kwargs):
 
     config_paths = [Path.home() / '.config/pyseq2500/machine_settings',
                     Path.home() / '.pyseq2500/machine_settings']
-    # if extra_config_path is not None:
-    config_paths.insert(0, Path(extra_config_path))
+    if extra_config_path is not None:
+        config_paths.insert(0, Path(extra_config_path))
 
     config_path = None
     for p in config_paths:
@@ -1449,7 +1449,7 @@ class HiSeqImages():
         # Old method of reading xarray zarr store attributes 
         if path.with_suffix('.attrs').exists():
 
-            with open(path) as f:
+            with open(path.with_suffix('.attrs')) as f:
                 for line in f:
                     items = line.split()
                     if len(items) == 2:
