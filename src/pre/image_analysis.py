@@ -1749,18 +1749,21 @@ class HiSeqImages():
             for ch in self.im['channel']:
                 channels_.append(Channel(name=str(int(ch)), **self.config.get('channels')[int(ch)]))
             size_c_ = len(self.im.channel)
+            dim_order = 'TCZYX'
+            im = self.im.transpose('cycle', 'channel', 'obj_step', 'row', 'col')
         elif 'marker' in self.im.dims:
             for ch in self.im['marker']:
                 channels_.append(Channel(name=f'{ch.values}', fluor = f'Cycle {str(ch.cycle.values)}',
                                          **self.config.get('channels')[int(ch.channel)]))
             size_c_ = len(self.im.marker)
+            dim_order = 'CZYX'
         else:
             raise KeyError('Missing Channel Dimension')
         # if not isinstance(self.im, list):
         #     self.im = [self.im]
 
         # for im in self.im:
-        im = self.im.transpose('cycle', 'channel', 'obj_step', 'row', 'col')
+        
         pxs = Pixels(channels = channels_, 
                      dimension_order = 'XYZCT', #Place holder, actually dim order TCZYX
                      size_x = len(im.col),
@@ -1791,7 +1794,7 @@ class HiSeqImages():
             ome_dict['images'][0]['pixels']['channels'][i]['color'] = color_val
             
         # Pixel Order Object Not JSON Serializable
-        ome_dict['images'][0]['pixels']['dimension_order'] = 'TCZYX'
+        ome_dict['images'][0]['pixels']['dimension_order'] = dim_order
         ome_dict['images'][0]['pixels']['type'] = ome_dict['images'][0]['pixels']['type'].value
         
 
@@ -1803,7 +1806,7 @@ class HiSeqImages():
             store = parse_url(store_path, mode="w").store
             root = zarr.group(store=store)
             delayed_ = write_image(image=im.data, group=root, compute=compute,
-                                   axes="tczyx", storage_options={'chunks':[i[0] for i in self.im.chunks]})
+                                   axes=dim_order.lower(), storage_options={'chunks':[i[0] for i in self.im.chunks]})
             root.attrs["omero"] = ome_dict
             return delayed_
         except Exception:
