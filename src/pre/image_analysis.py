@@ -1742,20 +1742,21 @@ class HiSeqImages():
         dir_path = Path(dir_path)
         instrument_ = Instrument(microscope = Microscope(**self.config['Microscope']), 
                                  objectives = [Objective(**self.config['Objective'])])
+        im = self.im
 
         # Channel OME metadata
         channels_ = []
         if 'channel' in self.im.dims:
-            for ch in self.im['channel']:
+            for ch in im['channel']:
                 channels_.append(Channel(name=str(int(ch)), **self.config.get('channels')[int(ch)]))
-            size_c_ = len(self.im.channel)
+            size_c_ = len(im.channel)
             dim_order = 'TCZYX'
-            im = self.im.transpose('cycle', 'channel', 'obj_step', 'row', 'col')
+            im = im.transpose('cycle', 'channel', 'obj_step', 'row', 'col')
         elif 'marker' in self.im.dims:
-            for ch in self.im['marker']:
+            for ch in im['marker']:
                 channels_.append(Channel(name=f'{ch.values}', fluor = f'Cycle {str(ch.cycle.values)}',
-                                         **self.config.get('channels')[int(ch.channel)]))
-            size_c_ = len(self.im.marker)
+                                         **self.config.get('channels')[int(ch.channel.values)]))
+            size_c_ = len(im.marker)
             dim_order = 'CZYX'
         else:
             raise KeyError('Missing Channel Dimension')

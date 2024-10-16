@@ -21,14 +21,15 @@ def demo_image(request, demo_config):
     return im
 
 @pytest.fixture()
-def HSImage(demo_config):
+def HSImage():
 
     # TODO make test images from Origin and Varick and have
     # old config file for one and new yaml config for the other
     # also have demo configs in demo folder
     image_path = Path(ia.__file__).parents[2] / Path('src/demo/images')
+    config_path = Path(ia.__file__).parents[1] / Path('demo/machine_settings.yaml')
     # Reads 2 sections; m1a and m3b, return 1 it doesn't matter which
-    im = ia.HiSeqImages.open_tiffs(image_path, common_name='m1a', extra_config_path=demo_config)
+    im = ia.HiSeqImages.open_tiffs(image_path, common='m1a', extra_config_path=config_path)
     # im = ia.get_HiSeqImages(image_path, common_name = request.param, extra_config_path = demo_config)
 
     return im
@@ -68,13 +69,51 @@ def test_xr_zarr(xr_zarr, demo_config):
         assert d == d_
 
 @pytest.fixture()
-def ome_zarr(demo_image, tmp_path_factory):   
+def ome_zarr(HSImage, tmp_path_factory):   
 
-    if not isinstance(demo_image.config, configparser.ConfigParser):
+    if not isinstance(HSImage.config, configparser.ConfigParser):
         omezarrpath = tmp_path_factory.mktemp('omezarr')
-        demo_image.save_ome_zarr(omezarrpath, compute=True)
+        HSImage.save_ome_zarr(omezarrpath, compute=True)
 
         return omezarrpath
+    
+@pytest.fixture()
+def marker_ome_zarr(HSImage, demo_config, tmp_path_factory):  
+
+    import xarray as xr 
+
+    marker_dict = {1:{610:'GFAP'},
+                   2:{740:'ELAVL2'},
+                   3:{558:'LMNB1'},
+                   4:{687:'MBP'},
+                   5:{558:'LMNB1', 610:'GFAP', 687:'MBP', 740:'ELAVL2'}
+    }
+
+
+    if not isinstance(HSImage.config, configparser.ConfigParser):
+        stack, markers_ = [], []
+        for cy in marker_dict.keys():
+            for ch in marker_dict[cy].keys():
+                stack.append(HSImage.im.sel(cycle=cy, channel=ch))
+                markers_.append(marker_dict[cy][ch])
+        im = xr.concat(stack, dim='marker').assign_coords({'marker':markers_})
+        marker_im = ia.HiSeqImages(im=im, machine=HSImage.machine, files=HSImage.files, extra_config_path=demo_config)
+        omezarrpath = tmp_path_factory.mktemp('markeromezarr')
+        marker_im.save_ome_zarr(omezarrpath, compute=True)
+
+        return omezarrpath
+
+def test_marker_ome_zarr(marker_ome_zarr, demo_config):
+
+    im = ia.HiSeqImages.open_zarr(marker_ome_zarr, extra_config_path=demo_config)
+    print(im.im)
+
+    assert im is not None
+    assert im.config is not None
+    assert im.machine == 'Origin'
+    assert im.im.attrs['omero'].get('images')[0] is not None
+    for d, d_ in zip(im.im.dims, ['channel', 'obj_step', 'row', 'col']):
+        assert d == d_
 
 def test_ome_zarr(ome_zarr, demo_config):
 
