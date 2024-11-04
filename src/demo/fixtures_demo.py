@@ -10,6 +10,7 @@ def experiment_config_paths():
 
     return [cfg_str, cfg_path]
 
+
 @pytest.fixture(scope='session', params=experiment_config_paths())
 def exp_config_path(request):
     yield request.param
