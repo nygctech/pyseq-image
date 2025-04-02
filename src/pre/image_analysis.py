@@ -1296,6 +1296,10 @@ class HiSeqImages():
 
         # Compute mean and gamma correction 
         mean = flat_ch[flat_ch > bg].mean().compute()
+        # if mean = 1, log(mean)=0, and ZeroDivisionError
+        # limit mean to 10 to prevent extreme gamma values
+        if mean < 10:
+            mean = 10
         gamma =  mid_log / log(mean)
 
         # min / max normalize
