@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 import configparser
+import pooch
 # from tempfile import TemporaryDirectory
 
 
@@ -86,7 +87,7 @@ def marker_ome_zarr(HSImage, demo_config, tmp_path_factory):
                    2:{740:'ELAVL2'},
                    3:{558:'LMNB1'},
                    4:{687:'MBP'},
-                   5:{558:'LMNB1', 610:'GFAP', 687:'MBP', 740:'ELAVL2'}
+                   5:{558:'LMNB1_5', 610:'GFAP_5', 687:'MBP_5', 740:'ELAVL2_5'}
     }
 
 
@@ -180,3 +181,44 @@ def test_get_HiSeqImages(demo_config):
     assert len(ims) == 2
     ims = ia.get_HiSeqImages(image_path, common_name='m3b', extra_config_path=demo_config)
     assert isinstance(ims, ia.HiSeqImages)
+
+
+@pytest.fixture(scope="session")
+def rough_scan_data():
+    """Download and cache RoughScan test data from Zenodo.
+
+    Returns:
+        Path: Path to the extracted RoughScan directory containing image files.
+              The directory contains:
+              - Image files: 12-bit TIFF files across 4 channels (558, 610, 687, 740)
+                with 3 tiles per channel (tile IDs: 10292, 10607, 10922)
+              - Metadata files: .txt files with scan parameters
+    """
+    # Use pooch's default cache directory (~/.cache/pyseq2500)
+    data_path = pooch.os_cache("pyseq2500")
+
+    # Create a pooch instance for the Zenodo dataset
+    rough_pooch = pooch.create(
+        path=data_path,
+        base_url="https://zenodo.org/record/19355899/files/",
+        registry={"RoughScan.tar.gz": None},  # None skips checksum for now
+    )
+
+    # Download the tarball (cached after first download)
+    tarball_path = rough_pooch.fetch("RoughScan.tar.gz", processor=None)
+
+    # Extract the tarball
+    extract_dir = data_path / "RoughScan"
+    if not extract_dir.exists():
+        with tarfile.open(tarball_path, "r:gz") as tar:
+            tar.extractall(path=data_path)
+
+    return extract_dir
+
+def test_open_rough_scan(rough_scan_data):
+    im = ia.HiSeqImages.open_RoughScan(rough_scan_data, suffix = "tif")
+    assert im.im.shape ==  (4, 4544, 6144)
+    assert im.im.dims == ('channel', 'row', 'col')
+    assert "background" in im.config
+    assert "OME" in im.config
+    
