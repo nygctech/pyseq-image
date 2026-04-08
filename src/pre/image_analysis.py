@@ -522,7 +522,8 @@ def get_machine_config(machine, extra_config_path=None, **kwargs):
       config_path: Machine settings config path (str)
     '''
 
-    config_paths = [Path.home() / '.config/pyseq2500/machine_settings',
+    config_paths = [Path.home() / '.config/pyseq/machine_settings',
+                    Path.home() / '.config/pyseq2500/machine_settings',
                     Path.home() / '.pyseq2500/machine_settings']
     if extra_config_path is not None:
         config_paths.insert(0, Path(extra_config_path))
@@ -544,6 +545,8 @@ def get_machine_config(machine, extra_config_path=None, **kwargs):
 
         if config_path.suffix == '.yaml':
             config = config.get(machine, None)
+            if isinstance(config, dict) and "image" in config:
+                config = config["image"]
         elif config_path.suffix == '.cfg':
             machine = str(machine).lower()
             if machine not in config.options('machines'):
@@ -808,17 +811,23 @@ class HiSeqImages():
         #     self.name = im.name
 
     def assign_machine(self):
-        config_path = Path.home() / '.config/pyseq2500/machine_settings.yaml'
-        if isinstance(self.files, list):
-            name_path = self.files[0].parent/'machine_name.txt'
-            if name_path.exists():
-                with open(name_path,'r') as f:
-                    self.machine = f.readline().strip()
-        elif config_path.exists():
-            config = get_config(config_path)
-            self.machine = config.get('name', None)
-        else:
-            logger.warning('Could not assign machine')
+        config_paths = [Path.home() / '.config/pyseq/machine_settings.yaml',
+                        Path.home() / '.config/pyseq2500/machine_settings.yaml']
+        
+        for config_path in config_paths:
+            if isinstance(self.files, list) and len(self.files) > 0:
+                name_path = self.files[0].parent/'machine_name.txt'
+                if name_path.exists():
+                    with open(name_path,'r') as f:
+                        self.machine = f.readline().strip()
+                    break
+            elif config_path.exists():
+                config = get_config(config_path)
+                self.machine = config.get('name', None)
+                break
+
+        if self.machine is None:
+                logger.warning('Could not assign machine')
 
         self.im.attrs['machine'] = self.machine
 
@@ -1553,21 +1562,23 @@ class HiSeqImages():
 
 
     @classmethod
-    def open_RoughScan(cls, path, **kwargs):
+    def open_RoughScan(cls, path: str, suffix: str = "tiff" , name: str = "RoughScan"):
+
 
         # Open RoughScan tiffs
-        files = get_image_files(path, 'zarr', 'RoughScan')
+        files = get_image_files(path, suffix, name)
 
 
         comp_sets = dict()
         for f in files:
             # Break up filename into components
-            comp_ = f.stem
+            comp_ = f.stem.split("_")
             for i, comp in enumerate(comp_):
                 comp_sets.setdefault(i,set())
                 comp_sets[i].add(comp)
 
-        shape = imageio.imread(files[0]).shape
+
+        shape = imageio.v2.imread(files[0]).shape
         lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
         lazy_arrays = [da.from_delayed(x, shape=shape, dtype='int16') for x in lazy_arrays]
 
@@ -1581,7 +1592,7 @@ class HiSeqImages():
         remap_comps = [fn_comp_sets[0], [1], fn_comp_sets[2]]
         a = np.empty(tuple(map(len, remap_comps)), dtype=object)
         for f, x in zip(files, lazy_arrays):
-            comp_ = f.stem
+            comp_ = f.stem.split("_")
             channel = fn_comp_sets[0].index(int(comp_[0][1:]))
             x_step = fn_comp_sets[2].index(int(comp_[2][1:]))
             a[channel, 0, x_step] = x
@@ -1601,6 +1612,8 @@ class HiSeqImages():
                              overlap=0, fixed_bg = 0)
         # Remove top header
         im = im.sel(row=slice(64,None))
+
+        print(im)
         
         hsim = cls(im)
         hsim.files = files
