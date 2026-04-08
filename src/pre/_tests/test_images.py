@@ -4,6 +4,7 @@ import pytest
 from pathlib import Path
 import configparser
 import pooch
+from pre.utils import get_logger
 # from tempfile import TemporaryDirectory
 
 
@@ -107,7 +108,6 @@ def marker_ome_zarr(HSImage, demo_config, tmp_path_factory):
 def test_marker_ome_zarr(marker_ome_zarr, demo_config):
 
     im = ia.HiSeqImages.open_zarr(marker_ome_zarr, extra_config_path=demo_config)
-    print(im.im)
 
     assert im is not None
     assert im.config is not None
@@ -221,4 +221,9 @@ def test_open_rough_scan(rough_scan_data):
     assert im.im.dims == ('channel', 'row', 'col')
     assert "background" in im.config
     assert "OME" in im.config
+
+    im.correct_background()
+    im.register_channels()
+    logger = get_logger("PySeq")
+    ia.sum_images(im.im)
     

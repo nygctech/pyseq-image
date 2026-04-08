@@ -55,7 +55,7 @@ except ImportError:
 logger = get_logger()
 
 
-def message(logger, *args):
+def message(*args):
     """Print output text to logger or console.
 
        If there is no logger, text is printed to the console.
@@ -70,10 +70,10 @@ def message(logger, *args):
     if logger is None:
         print(msg)
     else:
-        module.info(msg)
+        logger.info(msg)
 
 
-def sum_images(images, logger = None, **kwargs):
+def sum_images(images, **kwargs):
     """Sum pixel values over channel images.
 
        The image with the largest signal to noise ratio is used as the
@@ -112,8 +112,7 @@ def sum_images(images, logger = None, **kwargs):
             std = None
 
         k = kurt(images.sel(channel=ch), mean=mean, std=std)
-        message(logger, name_, 'Channel',ch, 'k = ', k)
-        print(name_, 'Channel',ch, 'k = ', k)
+        logger.info(f"{name_} :: Channel {ch} :: kurtosis =  {k}")
         k_dict[ch] = k
 
     # Pick kurtosis threshold
@@ -121,7 +120,7 @@ def sum_images(images, logger = None, **kwargs):
     thresh_ind = np.where(max_k>np.array(thresh))[0]
     if len(thresh_ind) > 0:
         thresh = thresh[max(thresh_ind)]
-        message(logger, name_, 'kurtosis threshold (k) = ', thresh)
+        logger.info(f"{name_} :: kurtosis threshold = {thresh}")
 
         # keep channels with high kurtosis
         keep_ch = [ch for ch in channels if k_dict[ch] > thresh]
@@ -156,7 +155,7 @@ def interpolate(image, new_min=0, new_max=1, old_min=None, old_max=None, dtype =
 
 def kurt(im, mean=None, std=None):
     """Return kurtosis = mean((image-mode)/2)^4). """
-    print(mean, std)
+
     if mean is None:
         mean = stats.mode(im, axis = None)[0][0]
     if std is None:
@@ -714,9 +713,6 @@ class HiSeqImages():
     channel_color = {558:'blue', 610:'green', 687:'magenta', 740:'red'}
 
     def __init__(self, im, machine=None, files=[], **kwargs):
-        
-        # image_path=None, common_name='',  im=None,
-        #                obj_stack=None, RoughScan = False, **kwargs):
         """The constructor for HiSeq Image Datasets.
 
            **Parameters:**
@@ -737,78 +733,6 @@ class HiSeqImages():
         if self.machine is not None:
             self.config, config_path = get_machine_config(im.machine, **kwargs)
         
-
-        # if im is None:
-
-        #     if image_path is None:
-        #         image_path = getcwd()
-        #     else:
-        #         image_path = str(image_path)
-
-        #     # Get machine config
-        #     name_path = path.join(image_path,'machine_name.txt')
-        #     if path.exists(name_path):
-        #         with open(name_path,'r') as f:
-        #             machine = f.readline().strip()
-        #         self.config, config_path = get_machine_config(machine, **kwargs)
-        #     if self.config is not None:
-        #         self.machine = machine
-        #     if self.machine is None:
-        #         self.machine = ''
-
-        #     if len(common_name) > 0:
-        #         common_name = '*'+common_name
-
-        #     section_names = []
-
-        #     # Open zarr
-        #     if image_path[-4:] == 'zarr':
-        #         self.filenames = [image_path]
-        #         section_names = self.open_zarr()
-
-        #     elif obj_stack is not None:
-        #         # Open obj stack (jpegs)
-        #         #filenames = glob.glob(path.join(image_path, common_name+'*.jpeg'))
-        #         n_frames = self.open_objstack(obj_stack)
-
-        #     elif RoughScan:
-        #         # RoughScans
-        #         filenames = glob.glob(path.join(image_path,'*RoughScan*.tiff'))
-        #         if len(filenames) > 0:
-        #             self.filenames = filenames
-        #             n_tiles = self.open_RoughScan()
-
-        #     else:
-        #         # Open tiffs
-        #         filenames = glob.glob(path.join(image_path, common_name+'*.tiff'))
-        #         if len(filenames) > 0:
-        #             self.filenames = filenames
-        #             section_names += self.open_tiffs()
-
-        #         # Open zarrs
-        #         filenames = glob.glob(path.join(image_path, common_name+'*.zarr'))
-        #         if len(filenames) > 0:
-        #             self.filenames = filenames
-        #             try:             
-        #                 ome_metadata = zarr.open_group(path, mode = 'r').attrs["omero"]
-        #                 sections_names += self.read_ome_zarr(ome_metadata)
-        #             except:
-        #                 section_names += self.open_zarr()
-
-        #     if len(section_names) == 1:
-        #         self.name = section_names[0]
-
-        #     if len(section_names) > 0:
-        #         section_names = ' '.join(section_names)
-        #         self.logger.info(f'Opened {section_names}')
-
-
-        # else:
-        #     self.machine = im.machine
-        #     if im.machine is not None:
-        #         self.config, config_path = get_machine_config(im.machine)
-        #     self.im = im
-        #     self.name = im.name
 
     def assign_machine(self):
         config_paths = [Path.home() / '.config/pyseq/machine_settings.yaml',
@@ -918,13 +842,14 @@ class HiSeqImages():
             corrected = (((plane-group_min_).clip(min=0)/old_contrast * new_contrast) +  new_min_).astype('uint16')
             ch_list.append(corrected)
 
-        print(self.im)
-        _dims = tuple(['channel']+list(corrected.dims))
-        logger.error(_dims)
+        # print(self.im)
+        # _dims = tuple(['channel']+list(corrected.dims))
+        # logger.error(_dims)
 
         self.im = xr.concat(ch_list, dim='channel')
-        print(self.im)
+        # print(self.im)
         self.im.name = self.name
+        self.im.attrs["fixed_bg"] = 1
 
         return self.im
 
@@ -1004,9 +929,7 @@ class HiSeqImages():
 
         # Get registration data
         reg_config = self.config.get('registration', None)
-
         pre_msg = 'getRegistrationData ::'
-        logger.info(f'{pre_msg} {self.machine} registration data')
 
         reg_dict = {}
         crop_bb = [top, bottom, left, right]
@@ -1030,7 +953,7 @@ class HiSeqImages():
 
             logger.info(f'{pre_msg} :: Crop bounding box :: {crop_bb} (top, bottom, left, right)')
         else:
-            raise ValueError(f'Registration data for {machine} not found')
+            raise ValueError(f'Registration data for {self.machine} not found')
 
         return reg_dict, crop_bb
 
@@ -1604,8 +1527,6 @@ class HiSeqImages():
                              overlap=0, fixed_bg = 0)
         # Remove top header
         im = im.sel(row=slice(64,None))
-
-        print(im)
         
         hsim = cls(im)
         hsim.files = files
