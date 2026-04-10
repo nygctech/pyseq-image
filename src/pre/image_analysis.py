@@ -8,18 +8,17 @@ import xarray as xr
 import zarr
 import traceback
 from collections import defaultdict
+from typing import Union, List
 
 
 
 from math import log2, ceil, floor, log
 from pathlib import Path
-from os import path, getcwd, mkdir, makedirs
+from os import path, getcwd, makedirs
 from scipy import stats
 from scipy.spatial.distance import cdist
-import imageio
-import glob
+import imageio.v3 as iio
 import configparser
-import time
 import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
@@ -27,8 +26,7 @@ from skimage.filters import median as med_filter
 from skimage.morphology import square
 import yaml
 from pre.utils import get_config, get_logger
-import logging
-import traceback 
+
 
 from io import BytesIO
 from dask import delayed
@@ -85,7 +83,6 @@ def sum_images(images, **kwargs):
 
        Parameters:
        - images (data array): Xarray data array of images
-       - logger (logger): Logger object to record process.
 
        Return:
        - array: Xarray data array of summed image or None if no signal
@@ -157,7 +154,10 @@ def kurt(im, mean=None, std=None):
     """Return kurtosis = mean((image-mode)/2)^4). """
 
     if mean is None:
-        mean = stats.mode(im, axis = None)[0][0]
+        mode_result = stats.mode(im, axis=None, keepdims=True)
+        # Scipy >= 1.9.0 returns ModeResult with .mode attribute
+        # Scipy < 1.9.0 returns tuple (mode, count)
+        mean = mode_result.mode[0] if hasattr(mode_result, 'mode') else mode_result[0][0]
     if std is None:
         std = 2
     z_score = (im-mean)/std
@@ -166,7 +166,7 @@ def kurt(im, mean=None, std=None):
 
     return k
 
-def get_focus_points(im, scale, min_n_markers, log=None, p_sat = 99.9):
+def get_focus_points(im, scale, min_n_markers, p_sat = 99.9):
     """Get potential points to focus on.
 
        First 1000 of the brightest, unsaturated pixels are found.
@@ -179,8 +179,6 @@ def get_focus_points(im, scale, min_n_markers, log=None, p_sat = 99.9):
        - scale (int): Factor at which the image is scaled down.
        - min_n_markers (int): Minimun number of points desired, max is 1000.
        - p_sat (float): Percentile to call pixels saturated.
-       - log (logger): Logger object to record process.
-
 
        **Returns:**
        - array: Row, Column list of ordered pixels to use as focus points.
@@ -276,7 +274,7 @@ def get_focus_points(im, scale, min_n_markers, log=None, p_sat = 99.9):
 
     return ord_points
 
-def get_focus_points_partial(im, scale, min_n_markers, log=None, p_sat = 99.9):
+def get_focus_points_partial(im, scale, min_n_markers, p_sat = 99.9):
     """Get potential points to focus on.
 
        First 1000 of the brightest, unsaturated pixels are found.
@@ -289,8 +287,6 @@ def get_focus_points_partial(im, scale, min_n_markers, log=None, p_sat = 99.9):
        - scale (int): Factor at which the image is scaled down.
        - min_n_markers (int): Minimun number of points desired, max is 1000.
        - p_sat (float): Percentile to call pixels saturated.
-       - log (logger): Logger object to record process.
-
 
        **Returns:**
        - array: Row, Column list of ordered pixels to use as focus points.
@@ -537,7 +533,7 @@ def get_machine_config(machine, extra_config_path=None, **kwargs):
             break
 
     if config_path is None:
-        logger.error(f'Machine settings config not found')
+        logger.error('Machine settings config not found')
         config = None
     else:
         config = get_config(config_path)
@@ -1084,7 +1080,7 @@ class HiSeqImages():
         @delayed
         def _get_jpeg(tile):
 
-            jpeg_size = np.zeros((_rows,1), 'uint8')
+            jpeg_size = np.zeros((_rows,1), int)
             tile = tile.values
 
             for r in range(_rows):
@@ -1093,7 +1089,7 @@ class HiSeqImages():
                 if im_max > 255 or im_min < 0:
                     fov = interpolate(fov, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
                 with BytesIO() as f:
-                    imageio.imwrite(f, fov, format='jpeg')
+                    iio.imwrite(f, fov, format='jpeg')
                     jpeg_size[r] = f.__sizeof__()
 
             return jpeg_size
@@ -1166,7 +1162,7 @@ class HiSeqImages():
         for ch in enumerate(channels):
             _min_px = min_px.sel(channel=ch).values
             _max_px = max_px.sel(channel=ch).values
-            message(logger, name_, 'Channel',ch, 'min px =', _min_px, 'max px =', _max_px)
+            message(name_, 'Channel',ch, 'min px =', _min_px, 'max px =', _max_px)
 
         self.im = (images-min_px)/(max_px-min_px)
 
@@ -1238,7 +1234,7 @@ class HiSeqImages():
         jpegim = (255 * (jpegim ** gamma)).astype('uint8')
 
         # write image
-        imageio.imwrite(save_path, jpegim)
+        iio.imwrite(save_path, jpegim)
 
 
     def preview_jpeg(self, image_path=None, downscale=4, sel={}, im_name=''):
@@ -1477,7 +1473,7 @@ class HiSeqImages():
 
 
     @classmethod
-    def open_RoughScan(cls, path: str, suffix: str = "tiff" , name: str = "RoughScan"):
+    def open_RoughScan(cls, path: str, suffix: Union[str, List[str]] = [".tiff", ".tif"], name: str = "RoughScan"):
 
 
         # Open RoughScan tiffs
@@ -1493,8 +1489,8 @@ class HiSeqImages():
                 comp_sets[i].add(comp)
 
 
-        shape = imageio.v2.imread(files[0]).shape
-        lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
+        shape = iio.imread(files[0]).shape
+        lazy_arrays = [dask.delayed(iio.imread)(f) for f in files]
         lazy_arrays = [da.from_delayed(x, shape=shape, dtype='int16') for x in lazy_arrays]
 
 
@@ -1575,7 +1571,7 @@ class HiSeqImages():
                 section = comp_[2]
                 # Add new section
                 if section_sets.setdefault(section, dict()) == {}:
-                    im = imageio.imread(f)
+                    im = iio.imread(f)
                     section_meta[section] = {'shape':im.shape,'dtype':im.dtype,'files':[]}
 
                 for i, comp in enumerate(comp_):
@@ -1587,7 +1583,7 @@ class HiSeqImages():
         for s in section_sets.keys():
             # Lazy open images
             files = section_meta[s]['files']
-            lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
+            lazy_arrays = [dask.delayed(iio.imread)(f) for f in files]
             shape = section_meta[s]['shape']
             dtype = section_meta[s]['dtype']
             lazy_arrays = [da.from_delayed(x, shape=shape, dtype=dtype) for x in lazy_arrays]
