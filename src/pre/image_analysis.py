@@ -8,18 +8,17 @@ import xarray as xr
 import zarr
 import traceback
 from collections import defaultdict
+from typing import Union, List
 
 
 
 from math import log2, ceil, floor, log
 from pathlib import Path
-from os import path, getcwd, mkdir, makedirs
+from os import path, getcwd, makedirs
 from scipy import stats
 from scipy.spatial.distance import cdist
-import imageio
-import glob
+import imageio.v3 as iio
 import configparser
-import time
 import tabulate
 #from qtpy.QtCore import QTimer
 from skimage.registration import phase_cross_correlation
@@ -27,8 +26,7 @@ from skimage.filters import median as med_filter
 from skimage.morphology import square
 import yaml
 from pre.utils import get_config, get_logger
-import logging
-import traceback 
+
 
 from io import BytesIO
 from dask import delayed
@@ -55,7 +53,7 @@ except ImportError:
 logger = get_logger()
 
 
-def message(logger, *args):
+def message(*args):
     """Print output text to logger or console.
 
        If there is no logger, text is printed to the console.
@@ -70,10 +68,10 @@ def message(logger, *args):
     if logger is None:
         print(msg)
     else:
-        module.info(msg)
+        logger.info(msg)
 
 
-def sum_images(images, logger = None, **kwargs):
+def sum_images(images, **kwargs):
     """Sum pixel values over channel images.
 
        The image with the largest signal to noise ratio is used as the
@@ -85,7 +83,6 @@ def sum_images(images, logger = None, **kwargs):
 
        Parameters:
        - images (data array): Xarray data array of images
-       - logger (logger): Logger object to record process.
 
        Return:
        - array: Xarray data array of summed image or None if no signal
@@ -112,8 +109,7 @@ def sum_images(images, logger = None, **kwargs):
             std = None
 
         k = kurt(images.sel(channel=ch), mean=mean, std=std)
-        message(logger, name_, 'Channel',ch, 'k = ', k)
-        print(name_, 'Channel',ch, 'k = ', k)
+        logger.info(f"{name_} :: Channel {ch} :: kurtosis =  {k}")
         k_dict[ch] = k
 
     # Pick kurtosis threshold
@@ -121,7 +117,7 @@ def sum_images(images, logger = None, **kwargs):
     thresh_ind = np.where(max_k>np.array(thresh))[0]
     if len(thresh_ind) > 0:
         thresh = thresh[max(thresh_ind)]
-        message(logger, name_, 'kurtosis threshold (k) = ', thresh)
+        logger.info(f"{name_} :: kurtosis threshold = {thresh}")
 
         # keep channels with high kurtosis
         keep_ch = [ch for ch in channels if k_dict[ch] > thresh]
@@ -156,9 +152,12 @@ def interpolate(image, new_min=0, new_max=1, old_min=None, old_max=None, dtype =
 
 def kurt(im, mean=None, std=None):
     """Return kurtosis = mean((image-mode)/2)^4). """
-    print(mean, std)
+
     if mean is None:
-        mean = stats.mode(im, axis = None)[0][0]
+        mode_result = stats.mode(im, axis=None, keepdims=True)
+        # Scipy >= 1.9.0 returns ModeResult with .mode attribute
+        # Scipy < 1.9.0 returns tuple (mode, count)
+        mean = mode_result.mode[0] if hasattr(mode_result, 'mode') else mode_result[0][0]
     if std is None:
         std = 2
     z_score = (im-mean)/std
@@ -167,7 +166,7 @@ def kurt(im, mean=None, std=None):
 
     return k
 
-def get_focus_points(im, scale, min_n_markers, log=None, p_sat = 99.9):
+def get_focus_points(im, scale, min_n_markers, p_sat = 99.9):
     """Get potential points to focus on.
 
        First 1000 of the brightest, unsaturated pixels are found.
@@ -180,8 +179,6 @@ def get_focus_points(im, scale, min_n_markers, log=None, p_sat = 99.9):
        - scale (int): Factor at which the image is scaled down.
        - min_n_markers (int): Minimun number of points desired, max is 1000.
        - p_sat (float): Percentile to call pixels saturated.
-       - log (logger): Logger object to record process.
-
 
        **Returns:**
        - array: Row, Column list of ordered pixels to use as focus points.
@@ -277,7 +274,7 @@ def get_focus_points(im, scale, min_n_markers, log=None, p_sat = 99.9):
 
     return ord_points
 
-def get_focus_points_partial(im, scale, min_n_markers, log=None, p_sat = 99.9):
+def get_focus_points_partial(im, scale, min_n_markers, p_sat = 99.9):
     """Get potential points to focus on.
 
        First 1000 of the brightest, unsaturated pixels are found.
@@ -290,8 +287,6 @@ def get_focus_points_partial(im, scale, min_n_markers, log=None, p_sat = 99.9):
        - scale (int): Factor at which the image is scaled down.
        - min_n_markers (int): Minimun number of points desired, max is 1000.
        - p_sat (float): Percentile to call pixels saturated.
-       - log (logger): Logger object to record process.
-
 
        **Returns:**
        - array: Row, Column list of ordered pixels to use as focus points.
@@ -538,7 +533,7 @@ def get_machine_config(machine, extra_config_path=None, **kwargs):
             break
 
     if config_path is None:
-        logger.error(f'Machine settings config not found')
+        logger.error('Machine settings config not found')
         config = None
     else:
         config = get_config(config_path)
@@ -714,9 +709,6 @@ class HiSeqImages():
     channel_color = {558:'blue', 610:'green', 687:'magenta', 740:'red'}
 
     def __init__(self, im, machine=None, files=[], **kwargs):
-        
-        # image_path=None, common_name='',  im=None,
-        #                obj_stack=None, RoughScan = False, **kwargs):
         """The constructor for HiSeq Image Datasets.
 
            **Parameters:**
@@ -737,78 +729,6 @@ class HiSeqImages():
         if self.machine is not None:
             self.config, config_path = get_machine_config(im.machine, **kwargs)
         
-
-        # if im is None:
-
-        #     if image_path is None:
-        #         image_path = getcwd()
-        #     else:
-        #         image_path = str(image_path)
-
-        #     # Get machine config
-        #     name_path = path.join(image_path,'machine_name.txt')
-        #     if path.exists(name_path):
-        #         with open(name_path,'r') as f:
-        #             machine = f.readline().strip()
-        #         self.config, config_path = get_machine_config(machine, **kwargs)
-        #     if self.config is not None:
-        #         self.machine = machine
-        #     if self.machine is None:
-        #         self.machine = ''
-
-        #     if len(common_name) > 0:
-        #         common_name = '*'+common_name
-
-        #     section_names = []
-
-        #     # Open zarr
-        #     if image_path[-4:] == 'zarr':
-        #         self.filenames = [image_path]
-        #         section_names = self.open_zarr()
-
-        #     elif obj_stack is not None:
-        #         # Open obj stack (jpegs)
-        #         #filenames = glob.glob(path.join(image_path, common_name+'*.jpeg'))
-        #         n_frames = self.open_objstack(obj_stack)
-
-        #     elif RoughScan:
-        #         # RoughScans
-        #         filenames = glob.glob(path.join(image_path,'*RoughScan*.tiff'))
-        #         if len(filenames) > 0:
-        #             self.filenames = filenames
-        #             n_tiles = self.open_RoughScan()
-
-        #     else:
-        #         # Open tiffs
-        #         filenames = glob.glob(path.join(image_path, common_name+'*.tiff'))
-        #         if len(filenames) > 0:
-        #             self.filenames = filenames
-        #             section_names += self.open_tiffs()
-
-        #         # Open zarrs
-        #         filenames = glob.glob(path.join(image_path, common_name+'*.zarr'))
-        #         if len(filenames) > 0:
-        #             self.filenames = filenames
-        #             try:             
-        #                 ome_metadata = zarr.open_group(path, mode = 'r').attrs["omero"]
-        #                 sections_names += self.read_ome_zarr(ome_metadata)
-        #             except:
-        #                 section_names += self.open_zarr()
-
-        #     if len(section_names) == 1:
-        #         self.name = section_names[0]
-
-        #     if len(section_names) > 0:
-        #         section_names = ' '.join(section_names)
-        #         self.logger.info(f'Opened {section_names}')
-
-
-        # else:
-        #     self.machine = im.machine
-        #     if im.machine is not None:
-        #         self.config, config_path = get_machine_config(im.machine)
-        #     self.im = im
-        #     self.name = im.name
 
     def assign_machine(self):
         config_paths = [Path.home() / '.config/pyseq/machine_settings.yaml',
@@ -918,13 +838,14 @@ class HiSeqImages():
             corrected = (((plane-group_min_).clip(min=0)/old_contrast * new_contrast) +  new_min_).astype('uint16')
             ch_list.append(corrected)
 
-        print(self.im)
-        _dims = tuple(['channel']+list(corrected.dims))
-        logger.error(_dims)
+        # print(self.im)
+        # _dims = tuple(['channel']+list(corrected.dims))
+        # logger.error(_dims)
 
         self.im = xr.concat(ch_list, dim='channel')
-        print(self.im)
+        # print(self.im)
         self.im.name = self.name
+        self.im.attrs["fixed_bg"] = 1
 
         return self.im
 
@@ -1004,9 +925,7 @@ class HiSeqImages():
 
         # Get registration data
         reg_config = self.config.get('registration', None)
-
         pre_msg = 'getRegistrationData ::'
-        logger.info(f'{pre_msg} {self.machine} registration data')
 
         reg_dict = {}
         crop_bb = [top, bottom, left, right]
@@ -1030,7 +949,7 @@ class HiSeqImages():
 
             logger.info(f'{pre_msg} :: Crop bounding box :: {crop_bb} (top, bottom, left, right)')
         else:
-            raise ValueError(f'Registration data for {machine} not found')
+            raise ValueError(f'Registration data for {self.machine} not found')
 
         return reg_dict, crop_bb
 
@@ -1161,7 +1080,7 @@ class HiSeqImages():
         @delayed
         def _get_jpeg(tile):
 
-            jpeg_size = np.zeros((_rows,1), 'uint8')
+            jpeg_size = np.zeros((_rows,1), int)
             tile = tile.values
 
             for r in range(_rows):
@@ -1170,7 +1089,7 @@ class HiSeqImages():
                 if im_max > 255 or im_min < 0:
                     fov = interpolate(fov, new_min = 0, new_max=255, old_min = im_min, old_max = im_max, dtype='uint8')
                 with BytesIO() as f:
-                    imageio.imwrite(f, fov, format='jpeg')
+                    iio.imwrite(f, fov, format='jpeg')
                     jpeg_size[r] = f.__sizeof__()
 
             return jpeg_size
@@ -1243,7 +1162,7 @@ class HiSeqImages():
         for ch in enumerate(channels):
             _min_px = min_px.sel(channel=ch).values
             _max_px = max_px.sel(channel=ch).values
-            message(logger, name_, 'Channel',ch, 'min px =', _min_px, 'max px =', _max_px)
+            message(name_, 'Channel',ch, 'min px =', _min_px, 'max px =', _max_px)
 
         self.im = (images-min_px)/(max_px-min_px)
 
@@ -1319,7 +1238,7 @@ class HiSeqImages():
         jpegim = (255 * (jpegim ** gamma)).astype('uint8')
 
         # write image
-        imageio.imwrite(save_path, jpegim)
+        iio.imwrite(save_path, jpegim)
 
 
     def preview_jpeg(self, image_path=None, downscale=4, sel={}, im_name=''):
@@ -1562,7 +1481,7 @@ class HiSeqImages():
 
 
     @classmethod
-    def open_RoughScan(cls, path: str, suffix: str = "tiff" , name: str = "RoughScan"):
+    def open_RoughScan(cls, path: str, suffix: Union[str, List[str]] = [".tiff", ".tif"], name: str = "RoughScan"):
 
 
         # Open RoughScan tiffs
@@ -1578,8 +1497,8 @@ class HiSeqImages():
                 comp_sets[i].add(comp)
 
 
-        shape = imageio.v2.imread(files[0]).shape
-        lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
+        shape = iio.imread(files[0]).shape
+        lazy_arrays = [dask.delayed(iio.imread)(f) for f in files]
         lazy_arrays = [da.from_delayed(x, shape=shape, dtype='int16') for x in lazy_arrays]
 
 
@@ -1612,8 +1531,6 @@ class HiSeqImages():
                              overlap=0, fixed_bg = 0)
         # Remove top header
         im = im.sel(row=slice(64,None))
-
-        print(im)
         
         hsim = cls(im)
         hsim.files = files
@@ -1662,7 +1579,7 @@ class HiSeqImages():
                 section = comp_[2]
                 # Add new section
                 if section_sets.setdefault(section, dict()) == {}:
-                    im = imageio.imread(f)
+                    im = iio.imread(f)
                     section_meta[section] = {'shape':im.shape,'dtype':im.dtype,'files':[]}
 
                 for i, comp in enumerate(comp_):
@@ -1674,7 +1591,7 @@ class HiSeqImages():
         for s in section_sets.keys():
             # Lazy open images
             files = section_meta[s]['files']
-            lazy_arrays = [dask.delayed(imageio.imread)(f) for f in files]
+            lazy_arrays = [dask.delayed(iio.imread)(f) for f in files]
             shape = section_meta[s]['shape']
             dtype = section_meta[s]['dtype']
             lazy_arrays = [da.from_delayed(x, shape=shape, dtype=dtype) for x in lazy_arrays]
