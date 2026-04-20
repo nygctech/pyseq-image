@@ -109,7 +109,7 @@ def sum_images(images, **kwargs):
             std = None
 
         k = kurt(images.sel(channel=ch), mean=mean, std=std)
-        logger.info(f"{name_} :: Channel {ch} :: kurtosis =  {k}")
+        logger.debug(f"{name_} :: Channel {ch} :: kurtosis =  {k}")
         k_dict[ch] = k
 
     # Pick kurtosis threshold
@@ -117,7 +117,7 @@ def sum_images(images, **kwargs):
     thresh_ind = np.where(max_k>np.array(thresh))[0]
     if len(thresh_ind) > 0:
         thresh = thresh[max(thresh_ind)]
-        logger.info(f"{name_} :: kurtosis threshold = {thresh}")
+        logger.debug(f"{name_} :: kurtosis threshold = {thresh}")
 
         # keep channels with high kurtosis
         keep_ch = [ch for ch in channels if k_dict[ch] > thresh]
@@ -213,13 +213,13 @@ def get_focus_points(im, scale, min_n_markers, p_sat = 99.9):
 
 
     px_score_thresh += 0.5
-    message(log, name_, 'Used', px_score_thresh, 'pixel score threshold')
+    message(name_, 'Used', px_score_thresh, 'pixel score threshold')
     markers = np.argwhere(im_ != 0)
 
 
     # Subset to 1000 points
     n_markers = len(markers)
-    message(log, name_, 'Found', n_markers, 'markers')
+    message(name_, 'Found', n_markers, 'markers')
     if n_markers > 1000:
       rand_markers = np.random.choice(range(n_markers), size = 1000)
       markers = markers[rand_markers,:]
@@ -241,7 +241,7 @@ def get_focus_points(im, scale, min_n_markers, p_sat = 99.9):
       p_top = (1 - min_n_markers/n_markers)*100
     else:
       p_top = 0
-    message(log, name_, 'Used', p_top, 'percentile cutoff')
+    message(name_, 'Used', p_top, 'percentile cutoff')
     c_cutoff = np.percentile(c_score, p_top)
     c_markers = markers[c_score >= c_cutoff,:]
 
@@ -1540,10 +1540,18 @@ class HiSeqImages():
     @classmethod
     def open_objstack(cls, obj_stack, **kwargs):
 
-        dim_names = ['frame', 'channel', 'row', 'col']
+        if "z" in kwargs:
+            dim_names = ["z"]
+            coord_values = {"z": kwargs["z"]}
+        else:
+            # for backwards compatibility
+            dim_names = ["frame"]
+            coord_values = {"frame": range(obj_stack.shape[0])}
+
+        dim_names += ['channel', 'row', 'col']
         channels = [687, 558, 610, 740]
-        frames = range(obj_stack.shape[0])
-        coord_values = {'channel':channels, 'frame':frames}
+        coord_values.update({'channel':channels})
+
         im = xr.DataArray(obj_stack.tolist(),
                                dims = dim_names,
                                coords = coord_values,
